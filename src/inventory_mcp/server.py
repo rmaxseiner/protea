@@ -201,55 +201,6 @@ TOOLS = [
             "required": ["bin_id"],
         },
     ),
-    # Bin Images
-    Tool(
-        name="get_bin_images",
-        description="Get all images for a bin",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "bin_id": {"type": "string", "description": "Bin UUID"},
-            },
-            "required": ["bin_id"],
-        },
-    ),
-    Tool(
-        name="add_bin_image",
-        description="Add an image to a bin",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "bin_id": {"type": "string", "description": "Bin UUID"},
-                "image_base64": {"type": "string", "description": "Base64-encoded image"},
-                "caption": {"type": "string", "description": "Optional caption"},
-                "is_primary": {"type": "boolean", "description": "Set as primary image", "default": False},
-            },
-            "required": ["bin_id", "image_base64"],
-        },
-    ),
-    Tool(
-        name="remove_bin_image",
-        description="Remove an image from a bin",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "image_id": {"type": "string", "description": "Image UUID"},
-            },
-            "required": ["image_id"],
-        },
-    ),
-    Tool(
-        name="set_primary_bin_image",
-        description="Set which image is the primary display image for a bin",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "bin_id": {"type": "string", "description": "Bin UUID"},
-                "image_id": {"type": "string", "description": "Image UUID"},
-            },
-            "required": ["bin_id", "image_id"],
-        },
-    ),
     # Items
     Tool(
         name="get_item",
@@ -498,19 +449,6 @@ TOOLS = [
         },
     ),
     Tool(
-        name="add_image_to_session",
-        description="Add an image to a session",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "session_id": {"type": "string", "description": "Session UUID"},
-                "image_base64": {"type": "string", "description": "Base64-encoded image"},
-                "original_filename": {"type": "string", "description": "Original filename"},
-            },
-            "required": ["session_id", "image_base64"],
-        },
-    ),
-    Tool(
         name="add_pending_item",
         description="Manually add an item to pending session",
         inputSchema={
@@ -604,19 +542,7 @@ TOOLS = [
             },
         },
     ),
-    # Vision
-    Tool(
-        name="extract_items_from_image",
-        description="Analyze an image and extract potential inventory items using Claude vision",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "image_base64": {"type": "string", "description": "Base64-encoded image"},
-                "context": {"type": "string", "description": "Context hint (e.g., 'this is a hardware bin')"},
-            },
-            "required": ["image_base64"],
-        },
-    ),
+    # Product Lookup
     Tool(
         name="lookup_product",
         description="Lookup product details from barcode/ASIN (stub - returns mock data)",
@@ -682,14 +608,6 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
         return bins.update_bin(db, **arguments)
     elif name == "delete_bin":
         return bins.delete_bin(db, **arguments)
-    elif name == "get_bin_images":
-        return bins.get_bin_images(db, **arguments)
-    elif name == "add_bin_image":
-        return bins.add_bin_image(db, image_store, **arguments)
-    elif name == "remove_bin_image":
-        return bins.remove_bin_image(db, image_store, **arguments)
-    elif name == "set_primary_bin_image":
-        return bins.set_primary_bin_image(db, **arguments)
 
     # Item tools
     elif name == "get_item":
@@ -740,8 +658,6 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
         return sessions.create_session(db, **arguments)
     elif name == "get_session":
         return sessions.get_session(db, **arguments)
-    elif name == "add_image_to_session":
-        return sessions.add_image_to_session(db, image_store, **arguments)
     elif name == "add_pending_item":
         return sessions.add_pending_item(db, **arguments)
     elif name == "update_pending_item":
@@ -757,9 +673,7 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
     elif name == "get_session_history":
         return sessions.get_session_history(db, **arguments)
 
-    # Vision tools
-    elif name == "extract_items_from_image":
-        return vision.extract_items_from_image(**arguments)
+    # Product lookup
     elif name == "lookup_product":
         return vision.lookup_product(**arguments)
 
