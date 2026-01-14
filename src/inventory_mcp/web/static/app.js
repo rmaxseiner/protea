@@ -10,22 +10,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const overlay = document.getElementById('sidebar-overlay');
 
     function openSidebar() {
-        sidebar.classList.add('open');
+        sidebar.classList.add('open', 'translate-x-0');
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
 
     function closeSidebar() {
-        sidebar.classList.remove('open');
+        sidebar.classList.remove('open', 'translate-x-0');
         sidebar.classList.add('-translate-x-full');
         overlay.classList.add('hidden');
         document.body.style.overflow = '';
     }
 
     if (menuBtn) {
-        menuBtn.addEventListener('click', function(e) {
-            e.preventDefault();
+        menuBtn.addEventListener('click', function() {
             if (sidebar.classList.contains('open')) {
                 closeSidebar();
             } else {
