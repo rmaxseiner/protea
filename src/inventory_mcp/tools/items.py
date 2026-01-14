@@ -8,12 +8,14 @@ from inventory_mcp.db.models import (
     ActivityAction,
     ActivityLog,
     Bin,
+    BinPathPart,
     Item,
     ItemSource,
     ItemWithLocation,
     Location,
     QuantityType,
 )
+from inventory_mcp.tools.bins import _build_bin_path, _get_bin_ancestors
 
 
 def _get_item_with_location(db: Database, item_id: str) -> ItemWithLocation | None:
@@ -33,6 +35,23 @@ def _get_item_with_location(db: Database, item_id: str) -> ItemWithLocation | No
     )
     if not row:
         return None
+
+    # Build the full bin path including nested bins
+    bin_path = _build_bin_path(db, row["bin_id"], include_location=True)
+
+    # Build path parts with IDs for linking
+    bin_path_parts = [
+        BinPathPart(id=row["loc_id"], name=row["loc_name"], type="location")
+    ]
+    ancestors = _get_bin_ancestors(db, row["bin_id"])
+    for ancestor in ancestors:
+        bin_path_parts.append(
+            BinPathPart(id=ancestor.id, name=ancestor.name, type="bin")
+        )
+    # Add the item's bin itself
+    bin_path_parts.append(
+        BinPathPart(id=row["bin_id"], name=row["bin_name"], type="bin")
+    )
 
     return ItemWithLocation(
         id=row["id"],
@@ -64,6 +83,8 @@ def _get_item_with_location(db: Database, item_id: str) -> ItemWithLocation | No
             created_at=row["loc_created"],
             updated_at=row["loc_updated"],
         ),
+        bin_path=bin_path,
+        bin_path_parts=bin_path_parts,
     )
 
 

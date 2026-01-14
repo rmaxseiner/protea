@@ -237,11 +237,21 @@ class BinTreeNode(BaseModel):
 BinTreeNode.model_rebuild()
 
 
+class BinPathPart(BaseModel):
+    """A component of a bin path for navigation."""
+
+    id: str
+    name: str
+    type: str  # "location" or "bin"
+
+
 class ItemWithLocation(Item):
     """Item with its bin and location included."""
 
     bin: Bin
     location: Location
+    bin_path: str = ""  # Full path like "Garage/Tool Chest/Drawer 9"
+    bin_path_parts: list[BinPathPart] = []  # Path components with IDs for linking
 
 
 class SearchResult(BaseModel):
