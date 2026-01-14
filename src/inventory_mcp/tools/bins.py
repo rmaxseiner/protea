@@ -7,6 +7,7 @@ from inventory_mcp.db.models import (
     Bin,
     BinDetail,
     BinImage,
+    BinPathPart,
     BinTreeNode,
     BinWithLocation,
     Item,
@@ -504,9 +505,14 @@ def get_bin(
     ]
 
     # Build path
-    ancestors = _get_bin_ancestors(db, row["id"])
-    path = [a.name for a in ancestors]
+    ancestor_bins = _get_bin_ancestors(db, row["id"])
+    path = [a.name for a in ancestor_bins]
     full_path = _build_bin_path(db, row["id"], include_location=True)
+
+    # Build ancestors list with IDs for navigation links
+    ancestors = [BinPathPart(id=location.id, name=location.name, type="location")]
+    for ancestor in ancestor_bins:
+        ancestors.append(BinPathPart(id=ancestor.id, name=ancestor.name, type="bin"))
 
     return BinDetail(
         id=row["id"],
@@ -525,6 +531,7 @@ def get_bin(
         child_bins=child_bins,
         path=path,
         full_path=full_path,
+        ancestors=ancestors,
     )
 
 

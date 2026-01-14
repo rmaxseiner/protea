@@ -8,21 +8,19 @@
     <nav class="mb-6">
         <ol class="flex items-center flex-wrap text-sm">
             <li class="flex items-center">
-                <a href="/browse" class="text-fynbos-500 hover:text-protea-600">Browse</a>
+                <a href="/browse" class="text-fynbos-500 hover:text-protea-600 hover:underline">Browse</a>
             </li>
             {% if bin %}
+            {% for ancestor in bin.ancestors %}
             <li class="flex items-center">
                 <svg class="w-4 h-4 mx-2 text-fynbos-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
-                <span class="text-fynbos-500">{{ bin.location.name }}</span>
-            </li>
-            {% for ancestor_name in bin.path %}
-            <li class="flex items-center">
-                <svg class="w-4 h-4 mx-2 text-fynbos-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-                <span class="text-fynbos-500">{{ ancestor_name }}</span>
+                {% if ancestor.type == "location" %}
+                <a href="/browse" class="text-fynbos-500 hover:text-protea-600 hover:underline">{{ ancestor.name }}</a>
+                {% else %}
+                <a href="/browse/bin/{{ ancestor.id }}" class="text-fynbos-500 hover:text-protea-600 hover:underline">{{ ancestor.name }}</a>
+                {% endif %}
             </li>
             {% endfor %}
             <li class="flex items-center">

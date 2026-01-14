@@ -207,6 +207,14 @@ class BinWithLocation(Bin):
     location: Location
 
 
+class BinPathPart(BaseModel):
+    """A component of a bin path for navigation."""
+
+    id: str
+    name: str
+    type: str  # "location" or "bin"
+
+
 class BinDetail(Bin):
     """Bin with full details including items and images."""
 
@@ -219,6 +227,7 @@ class BinDetail(Bin):
     child_bins: list[Bin] = []  # Direct child bins
     path: list[str] = []  # Ancestor bin names from root to parent
     full_path: str = ""  # Full path including location
+    ancestors: list[BinPathPart] = []  # Ancestor bins with IDs for navigation
 
 
 class BinTreeNode(BaseModel):
@@ -235,14 +244,6 @@ class BinTreeNode(BaseModel):
 
 # Enable forward reference resolution for recursive model
 BinTreeNode.model_rebuild()
-
-
-class BinPathPart(BaseModel):
-    """A component of a bin path for navigation."""
-
-    id: str
-    name: str
-    type: str  # "location" or "bin"
 
 
 class ItemWithLocation(Item):
