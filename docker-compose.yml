@@ -1,0 +1,28 @@
+services:
+  inventory-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: inventory-mcp:latest
+    container_name: inventory-web
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # Bind mounts for persistent data
+      - ./data/db:/data/db
+      - ./data/images:/data/images
+    environment:
+      - INVENTORY_DATABASE_PATH=/data/db/inventory.db
+      - INVENTORY_IMAGE_BASE_PATH=/data/images
+      - INVENTORY_WEB_HOST=0.0.0.0
+      - INVENTORY_WEB_PORT=8080
+      # Uncomment and set for vision extraction feature
+      # - INVENTORY_CLAUDE_API_KEY=sk-ant-...
+    command: ["web"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
