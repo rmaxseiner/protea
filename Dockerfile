@@ -52,10 +52,12 @@ USER appuser
 ENV INVENTORY_DATABASE_PATH=/data/db/inventory.db \
     INVENTORY_IMAGE_BASE_PATH=/data/images \
     INVENTORY_WEB_HOST=0.0.0.0 \
-    INVENTORY_WEB_PORT=8080
+    INVENTORY_WEB_PORT=8080 \
+    INVENTORY_MCP_SSE_HOST=0.0.0.0 \
+    INVENTORY_MCP_SSE_PORT=8081
 
-# Expose web UI port
-EXPOSE 8080
+# Expose web UI and MCP SSE ports
+EXPOSE 8080 8081
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     web_port: int = 8080
     web_host: str = "0.0.0.0"
 
+    # MCP SSE settings
+    mcp_sse_port: int = 8081
+    mcp_sse_host: str = "0.0.0.0"
+
     model_config = {"env_prefix": "INVENTORY_"}
 
 

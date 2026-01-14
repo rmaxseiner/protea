@@ -26,6 +26,7 @@ dev = [
 [project.scripts]
 inventory-mcp = "inventory_mcp.server:main"
 inventory-web = "inventory_mcp.web:main"
+inventory-mcp-sse = "inventory_mcp.mcp_sse:main"
 
 [build-system]
 requires = ["hatchling"]

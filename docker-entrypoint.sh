@@ -20,6 +20,12 @@ case "$1" in
         echo "==================================="
         exec inventory-mcp
         ;;
+    mcp-sse)
+        echo "Mode:     MCP SSE Server"
+        echo "URL:      http://0.0.0.0:${INVENTORY_MCP_SSE_PORT}/sse"
+        echo "==================================="
+        exec inventory-mcp-sse
+        ;;
     *)
         # Allow running arbitrary commands
         exec "$@"
