@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     image_format: str = "webp"
     image_quality: int = 85
     thumbnail_size: tuple[int, int] = (200, 200)
-    max_image_size_bytes: int = 10 * 1024 * 1024  # 10MB default
+    max_image_size_bytes: int = 15 * 1024 * 1024  # 15MB default
 
     # Session settings
     session_stale_minutes: int = 30

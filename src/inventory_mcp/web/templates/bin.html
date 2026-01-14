@@ -131,7 +131,8 @@
             <div class="relative group bg-cream-light rounded-lg border border-cream-dark overflow-hidden">
                 <img src="/images/{{ image.file_path }}?thumb=1"
                      alt="{{ image.caption or 'Bin image' }}"
-                     class="w-full h-32 object-cover">
+                     class="w-full h-32 object-cover"
+                     data-lightbox="/images/{{ image.file_path }}">
 
                 <!-- Primary badge -->
                 {% if image.is_primary %}
