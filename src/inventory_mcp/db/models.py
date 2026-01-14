@@ -68,11 +68,16 @@ class Location(BaseModel):
 
 
 class Bin(BaseModel):
-    """A container within a location that holds items."""
+    """A container within a location that holds items.
+
+    Bins can be nested - a bin with parent_bin_id is inside another bin.
+    Example: Location(Garage) -> Bin(Tool Chest) -> Bin(Drawer 9) -> Item
+    """
 
     id: str = Field(default_factory=generate_id)
     name: str
     location_id: str
+    parent_bin_id: Optional[str] = None  # Parent bin for nesting (None = root level)
     description: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -210,6 +215,26 @@ class BinDetail(Bin):
     images: list[BinImage] = []
     item_count: int = 0
     image_count: int = 0
+    parent_bin: Optional[Bin] = None  # Parent bin if nested
+    child_bins: list[Bin] = []  # Direct child bins
+    path: list[str] = []  # Ancestor bin names from root to parent
+    full_path: str = ""  # Full path including location
+
+
+class BinTreeNode(BaseModel):
+    """A bin node in a tree structure for hierarchical display."""
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    parent_bin_id: Optional[str] = None
+    item_count: int = 0
+    child_count: int = 0
+    children: list["BinTreeNode"] = []
+
+
+# Enable forward reference resolution for recursive model
+BinTreeNode.model_rebuild()
 
 
 class ItemWithLocation(Item):
@@ -226,6 +251,7 @@ class SearchResult(BaseModel):
     bin: Bin
     location: Location
     match_score: float = 1.0
+    bin_path: str = ""  # Full path like "Garage/Tool Chest/Drawer 9"
 
 
 class SessionDetail(Session):

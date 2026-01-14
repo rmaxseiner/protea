@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout B: Top Navigation with Tabs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --nav-bg: #1f2937;
+            --nav-text: #f3f4f6;
+            --content-bg: #f9fafb;
+            --card-bg: #ffffff;
+            --accent: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!--
+    LAYOUT B: TOP NAVIGATION WITH TABS
+
+    - Fixed top header with search always visible
+    - Tab bar below header for section switching
+    - Full-width content area
+    - Good for: Balanced desktop/mobile, search-first workflow
+    - Mobile: Tabs become scrollable, search stays prominent
+    -->
+
+    <!-- Top Header -->
+    <header class="fixed top-0 left-0 right-0 z-20 bg-gray-800">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex items-center h-14">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <span class="text-white font-semibold text-lg">Inventory</span>
+                </div>
+
+                <!-- Search Bar (Center) -->
+                <div class="flex-1 max-w-xl mx-4">
+                    <div class="relative">
+                        <input type="text"
+                               placeholder="Search items, bins, locations..."
+                               class="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gray-500 focus:border-transparent">
+                        <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- User -->
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-sm">R</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="fixed top-14 left-0 right-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex space-x-1 overflow-x-auto">
+                <a href="#search" class="px-4 py-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 whitespace-nowrap">
+                    Search
+                </a>
+                <a href="#browse" class="px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 whitespace-nowrap">
+                    Browse
+                </a>
+                <a href="#history" class="px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 whitespace-nowrap">
+                    History
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-8">
+        <div class="max-w-6xl mx-auto px-4">
+
+            <!-- Search Results Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-900">Search Results</h1>
+                    <p class="text-sm text-gray-500">3 items matching "M3 screws"</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-500">Sort:</span>
+                    <select class="text-sm border-gray-300 rounded-md">
+                        <option>Best Match</option>
+                        <option>Name A-Z</option>
+                        <option>Recently Added</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Results Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Card 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-900">M3 Socket Head Screws</h3>
+                                <p class="text-sm text-gray-500 mt-1">Garage → Hardware Bin</p>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">98%</span>
+                        </div>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-sm font-medium text-gray-700">~50 pieces</span>
+                            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">Fasteners</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-900">M3 Nuts</h3>
+                                <p class="text-sm text-gray-500 mt-1">Garage → Hardware Bin</p>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">85%</span>
+                        </div>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-sm font-medium text-gray-700">~30 pieces</span>
+                            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">Fasteners</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-900">M3 Standoffs</h3>
+                                <p class="text-sm text-gray-500 mt-1">Spare Bedroom → Computer Parts</p>
+                            </div>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded">72%</span>
+                        </div>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-sm font-medium text-gray-700">12 pieces</span>
+                            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">Electronics</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!--
+    ==========================================
+    BROWSE TAB CONTENT
+    ==========================================
+    -->
+    <div class="hidden">
+        <main class="pt-28 pb-8">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Locations List -->
+                    <div class="lg:col-span-1">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Locations</h2>
+                        <div class="space-y-2">
+                            <button class="w-full flex items-center justify-between p-3 bg-gray-800 text-white rounded-lg">
+                                <span class="font-medium">Garage</span>
+                                <span class="text-sm opacity-75">47 items</span>
+                            </button>
+                            <button class="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+                                <span class="font-medium text-gray-900">Spare Bedroom</span>
+                                <span class="text-sm text-gray-500">11 items</span>
+                            </button>
+                            <button class="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+                                <span class="font-medium text-gray-900">Office</span>
+                                <span class="text-sm text-gray-500">5 items</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bins in Location -->
+                    <div class="lg:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Garage</h2>
+                            <span class="text-sm text-gray-500">3 bins</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Bin Card -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md">
+                                <div class="h-32 bg-gray-200"></div>
+                                <div class="p-4">
+                                    <h3 class="font-medium text-gray-900">Hardware Bin</h3>
+                                    <p class="text-sm text-gray-500">32 items</p>
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">Screws</span>
+                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">Nuts</span>
+                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">+5</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bin Card -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md">
+                                <div class="h-32 bg-gray-200"></div>
+                                <div class="p-4">
+                                    <h3 class="font-medium text-gray-900">Tool Cabinet</h3>
+                                    <p class="text-sm text-gray-500">15 items</p>
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">Hand Tools</span>
+                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">+3</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!--
+    ==========================================
+    ITEM DETAIL MODAL
+    ==========================================
+    -->
+    <div class="hidden fixed inset-0 z-50">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+
+        <!-- Modal -->
+        <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-xl shadow-xl overflow-hidden">
+            <!-- Image -->
+            <div class="h-48 bg-gray-200 relative">
+                <button class="absolute top-3 right-3 w-8 h-8 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <h2 class="text-xl font-semibold text-gray-900">M3 Socket Head Screws</h2>
+                <p class="text-gray-500 mt-1">Garage → Hardware Bin</p>
+
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <div>
+                        <span class="text-sm text-gray-500">Quantity</span>
+                        <p class="font-medium text-gray-900">~50 pieces</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500">Category</span>
+                        <p class="font-medium text-gray-900">Fasteners</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500">Added</span>
+                        <p class="font-medium text-gray-900">Jan 13, 2026</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500">By</span>
+                        <p class="font-medium text-gray-900">Ron</p>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-wrap gap-2 mt-6">
+                    <button class="flex-1 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800">+ Add</button>
+                    <button class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">- Use</button>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button class="flex-1 px-4 py-2 text-gray-600 hover:text-gray-900">Edit</button>
+                    <button class="flex-1 px-4 py-2 text-gray-600 hover:text-gray-900">Move</button>
+                    <button class="flex-1 px-4 py-2 text-red-600 hover:text-red-700">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--
+    ==========================================
+    HISTORY TAB CONTENT
+    ==========================================
+    -->
+    <div class="hidden">
+        <main class="pt-28 pb-8">
+            <div class="max-w-3xl mx-auto px-4">
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <select class="text-sm border-gray-300 rounded-lg">
+                        <option>All Actions</option>
+                        <option>Added</option>
+                        <option>Used</option>
+                        <option>Moved</option>
+                    </select>
+                    <select class="text-sm border-gray-300 rounded-lg">
+                        <option>All Time</option>
+                        <option>Today</option>
+                        <option>This Week</option>
+                        <option>This Month</option>
+                    </select>
+                    <select class="text-sm border-gray-300 rounded-lg">
+                        <option>All Locations</option>
+                        <option>Garage</option>
+                        <option>Spare Bedroom</option>
+                    </select>
+                </div>
+
+                <!-- Timeline -->
+                <div class="space-y-4">
+                    <!-- Day Header -->
+                    <div class="text-sm font-medium text-gray-500">Today</div>
+
+                    <!-- Entry -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-gray-900"><span class="font-medium">Added</span> Arctic P12 120mm Fan (×2)</p>
+                                <p class="text-sm text-gray-500">Spare Bedroom → Computer Parts</p>
+                                <p class="text-xs text-gray-400 mt-1">2 hours ago by Ron</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Entry -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-gray-900"><span class="font-medium">Added</span> 10GbE Network Card</p>
+                                <p class="text-sm text-gray-500">Spare Bedroom → Computer Parts</p>
+                                <p class="text-xs text-gray-400 mt-1">2 hours ago by Ron</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day Header -->
+                    <div class="text-sm font-medium text-gray-500 pt-4">Yesterday</div>
+
+                    <!-- Entry -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-gray-900"><span class="font-medium">Used</span> M3 Screws (×4)</p>
+                                <p class="text-sm text-gray-500">Garage → Hardware Bin</p>
+                                <p class="text-xs text-gray-400 mt-1">Yesterday at 3:42 PM by Ron</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

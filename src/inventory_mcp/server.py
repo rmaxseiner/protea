@@ -113,17 +113,19 @@ TOOLS = [
     # Bins
     Tool(
         name="get_bins",
-        description="List bins, optionally filtered by location",
+        description="List bins, optionally filtered by location or parent bin",
         inputSchema={
             "type": "object",
             "properties": {
                 "location_id": {"type": "string", "description": "Filter by location UUID"},
+                "parent_bin_id": {"type": "string", "description": "Filter by parent bin UUID (get children)"},
+                "root_only": {"type": "boolean", "description": "Only return root-level bins (no parent)", "default": False},
             },
         },
     ),
     Tool(
         name="get_bin",
-        description="Get a single bin by ID or name",
+        description="Get a single bin by ID or name, with optional items, images, and nested hierarchy info",
         inputSchema={
             "type": "object",
             "properties": {
@@ -135,13 +137,39 @@ TOOLS = [
         },
     ),
     Tool(
+        name="get_bin_by_path",
+        description="Resolve a bin by its full path in a single call (e.g., 'Garage/Tool Chest/Drawer 9')",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Path like 'Location/Bin1/Bin2' or 'Bin1/Bin2' if location provided"},
+                "location_id": {"type": "string", "description": "Location UUID if path doesn't include location"},
+                "location_name": {"type": "string", "description": "Location name if path doesn't include location"},
+            },
+            "required": ["path"],
+        },
+    ),
+    Tool(
+        name="get_bin_tree",
+        description="Get nested tree structure of bins for efficient hierarchy display",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "location_id": {"type": "string", "description": "Filter by location UUID"},
+                "root_bin_id": {"type": "string", "description": "Start from specific bin (get subtree)"},
+                "max_depth": {"type": "integer", "description": "Maximum nesting depth", "default": 10},
+            },
+        },
+    ),
+    Tool(
         name="create_bin",
-        description="Create a new bin in a location",
+        description="Create a new bin in a location, optionally nested inside another bin",
         inputSchema={
             "type": "object",
             "properties": {
                 "name": {"type": "string", "description": "Bin name"},
                 "location_id": {"type": "string", "description": "Parent location UUID"},
+                "parent_bin_id": {"type": "string", "description": "Parent bin UUID for nesting (optional)"},
                 "description": {"type": "string", "description": "Optional description"},
             },
             "required": ["name", "location_id"],
@@ -149,13 +177,14 @@ TOOLS = [
     ),
     Tool(
         name="update_bin",
-        description="Update a bin",
+        description="Update a bin. Use parent_bin_id='' to move to root level",
         inputSchema={
             "type": "object",
             "properties": {
                 "bin_id": {"type": "string", "description": "Bin UUID"},
                 "name": {"type": "string", "description": "New name"},
                 "location_id": {"type": "string", "description": "New location"},
+                "parent_bin_id": {"type": "string", "description": "New parent bin (empty string '' to move to root)"},
                 "description": {"type": "string", "description": "New description"},
             },
             "required": ["bin_id"],
@@ -163,7 +192,7 @@ TOOLS = [
     ),
     Tool(
         name="delete_bin",
-        description="Delete a bin (fails if it has items)",
+        description="Delete a bin (fails if it has items or child bins)",
         inputSchema={
             "type": "object",
             "properties": {
@@ -643,6 +672,10 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
         return bins.get_bins(db, **arguments)
     elif name == "get_bin":
         return bins.get_bin(db, **arguments)
+    elif name == "get_bin_by_path":
+        return bins.get_bin_by_path(db, **arguments)
+    elif name == "get_bin_tree":
+        return bins.get_bin_tree(db, **arguments)
     elif name == "create_bin":
         return bins.create_bin(db, **arguments)
     elif name == "update_bin":

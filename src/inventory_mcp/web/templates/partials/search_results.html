@@ -1,0 +1,76 @@
+{% if results %}
+<div class="space-y-3">
+    <p class="text-fynbos-500 text-sm mb-4">
+        {{ results|length }} result{% if results|length != 1 %}s{% endif %}
+        {% if query %} for "{{ query }}"{% endif %}
+    </p>
+
+    {% for result in results %}
+    <a href="/item/{{ result.item.id }}"
+       class="block bg-cream-light rounded-xl border border-cream-dark p-4
+              hover:shadow-md hover:border-protea-300 transition-all">
+        <div class="flex gap-4">
+            <!-- Thumbnail -->
+            {% if result.item.photo_url %}
+            <img src="/images/{{ result.item.photo_url }}?thumb=1"
+                 alt="{{ result.item.name }}"
+                 class="w-16 h-16 object-cover rounded-lg flex-shrink-0 bg-fynbos-100">
+            {% else %}
+            <div class="w-16 h-16 bg-fynbos-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                <svg class="w-8 h-8 text-fynbos-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+            </div>
+            {% endif %}
+
+            <!-- Item Info -->
+            <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="font-semibold text-fynbos-900 truncate">{{ result.item.name }}</h3>
+
+                    <!-- Quantity -->
+                    <span class="text-fynbos-700 font-medium text-sm whitespace-nowrap">
+                        {% if result.item.quantity_type == 'exact' %}
+                            {{ result.item.quantity_value }}{% if result.item.quantity_label %} {{ result.item.quantity_label }}{% endif %}
+                        {% elif result.item.quantity_type == 'approximate' %}
+                            ~{{ result.item.quantity_value or '' }}{% if result.item.quantity_label %} {{ result.item.quantity_label }}{% endif %}
+                        {% else %}
+                            In stock
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- Location -->
+                <p class="text-fynbos-500 text-sm mt-1">
+                    {{ result.location.name }} &rarr; {{ result.bin.name }}
+                </p>
+
+                <!-- Match score and description -->
+                <div class="flex items-center gap-2 mt-2">
+                    {% set score_pct = (result.match_score * 100)|int %}
+                    {% if score_pct >= 80 %}
+                    <span class="px-2 py-0.5 bg-protea-100 text-protea-600 text-xs font-medium rounded">
+                        {{ score_pct }}% match
+                    </span>
+                    {% elif score_pct >= 60 %}
+                    <span class="px-2 py-0.5 bg-fynbos-100 text-fynbos-600 text-xs font-medium rounded">
+                        {{ score_pct }}% match
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-0.5 bg-fynbos-50 text-fynbos-500 text-xs font-medium rounded">
+                        {{ score_pct }}% match
+                    </span>
+                    {% endif %}
+
+                    {% if result.item.description %}
+                    <span class="text-fynbos-400 text-xs truncate">{{ result.item.description[:50] }}{% if result.item.description|length > 50 %}...{% endif %}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-center text-fynbos-500 py-8">No items found{% if query %} for "{{ query }}"{% endif %}</p>
+{% endif %}

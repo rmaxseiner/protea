@@ -10,6 +10,7 @@ from inventory_mcp.db.models import (
     Location,
     SearchResult,
 )
+from inventory_mcp.tools.bins import _build_bin_path
 
 
 def search_items(
@@ -57,6 +58,7 @@ def search_items(
     # Search items via FTS
     sql = f"""
         SELECT i.*, b.name as bin_name, b.description as bin_desc,
+               b.parent_bin_id as bin_parent_id,
                b.created_at as bin_created, b.updated_at as bin_updated,
                l.id as loc_id, l.name as loc_name, l.description as loc_desc,
                l.created_at as loc_created, l.updated_at as loc_updated,
@@ -75,6 +77,8 @@ def search_items(
 
     results = []
     for row in rows:
+        # Build bin path for nested bins
+        bin_path = _build_bin_path(db, row["bin_id"], include_location=True)
         results.append(
             SearchResult(
                 item=Item(
@@ -97,6 +101,7 @@ def search_items(
                     id=row["bin_id"],
                     name=row["bin_name"],
                     location_id=row["loc_id"],
+                    parent_bin_id=row["bin_parent_id"],
                     description=row["bin_desc"],
                     created_at=row["bin_created"],
                     updated_at=row["bin_updated"],
@@ -109,12 +114,14 @@ def search_items(
                     updated_at=row["loc_updated"],
                 ),
                 match_score=abs(row["score"]) if row["score"] else 1.0,
+                bin_path=bin_path,
             )
         )
 
     # Also search aliases
     alias_sql = f"""
         SELECT i.*, b.name as bin_name, b.description as bin_desc,
+               b.parent_bin_id as bin_parent_id,
                b.created_at as bin_created, b.updated_at as bin_updated,
                l.id as loc_id, l.name as loc_name, l.description as loc_desc,
                l.created_at as loc_created, l.updated_at as loc_updated,
@@ -136,6 +143,8 @@ def search_items(
     seen_ids = {r.item.id for r in results}
     for row in alias_rows:
         if row["id"] not in seen_ids:
+            # Build bin path for nested bins
+            bin_path = _build_bin_path(db, row["bin_id"], include_location=True)
             results.append(
                 SearchResult(
                     item=Item(
@@ -158,6 +167,7 @@ def search_items(
                         id=row["bin_id"],
                         name=row["bin_name"],
                         location_id=row["loc_id"],
+                        parent_bin_id=row["bin_parent_id"],
                         description=row["bin_desc"],
                         created_at=row["bin_created"],
                         updated_at=row["bin_updated"],
@@ -170,6 +180,7 @@ def search_items(
                         updated_at=row["loc_updated"],
                     ),
                     match_score=abs(row["score"]) * 0.9 if row["score"] else 0.9,  # Slightly lower for alias match
+                    bin_path=bin_path,
                 )
             )
             seen_ids.add(row["id"])

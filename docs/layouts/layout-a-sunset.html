@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout A: African Sunset Theme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // African Sunset Palette
+                        // Inspired by: deep amber/orange gradient, dark silhouettes, golden reflections
+                        sunset: {
+                            50: '#fef7ed',   // Pale dawn
+                            100: '#fdecd3',  // Light gold
+                            200: '#fbd5a5',  // Soft amber
+                            300: '#f8b86d',  // Golden
+                            400: '#f59235',  // Bright amber
+                            500: '#f27316',  // Deep orange
+                            600: '#e3570d',  // Burnt orange
+                            700: '#bc4010',  // Dark amber
+                            800: '#963415',  // Deep rust
+                            900: '#792d15',  // Dark rust
+                            950: '#411407',  // Near black warm
+                        },
+                        night: {
+                            50: '#f7f7f7',   // Light gray
+                            100: '#e3e3e3',  // Soft gray
+                            200: '#c8c8c8',  // Medium gray
+                            300: '#a4a4a4',  // Gray
+                            400: '#818181',  // Dark gray
+                            500: '#666666',  // Charcoal
+                            600: '#515151',  // Dark charcoal
+                            700: '#3d3d3d',  // Very dark
+                            800: '#262626',  // Near black
+                            900: '#1a1a1a',  // Deepest black
+                            950: '#0d0d0d',  // True silhouette
+                        },
+                        reflection: {
+                            light: '#fde8c8',  // Golden glow
+                            DEFAULT: '#d4a574', // Warm reflection
+                            dark: '#a67c52',   // Deep gold
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="bg-night-100">
+    <!--
+    AFRICAN SUNSET THEME
+
+    Palette:
+    - Sidebar: Deep silhouette blacks (night-900, night-950)
+    - Sidebar active: Sunset orange (sunset-600)
+    - Content bg: Soft warm gray (night-100)
+    - Cards: White with warm tints
+    - Accents: Golden/amber tones
+    - High contrast, dramatic feel
+    -->
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-night-900">
+                <!-- Logo/Brand -->
+                <div class="flex items-center h-16 px-4 bg-night-950">
+                    <span class="text-xl font-semibold text-sunset-400">Inventory</span>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+                    <a href="#search" class="flex items-center px-4 py-3 text-sunset-100 bg-sunset-700 rounded-lg">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Search
+                    </a>
+                    <a href="#browse" class="flex items-center px-4 py-3 text-night-300 hover:bg-night-800 hover:text-sunset-300 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        Browse Rooms
+                    </a>
+                    <a href="#history" class="flex items-center px-4 py-3 text-night-300 hover:bg-night-800 hover:text-sunset-300 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        History
+                    </a>
+                </nav>
+
+                <!-- User Section -->
+                <div class="flex items-center px-4 py-3 bg-night-950">
+                    <div class="w-8 h-8 bg-sunset-600 rounded-full flex items-center justify-center text-white text-sm font-medium">R</div>
+                    <span class="ml-3 text-night-200 text-sm">Ron</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Mobile Header -->
+        <div class="md:hidden fixed top-0 left-0 right-0 z-10 bg-night-900 h-14 flex items-center px-4">
+            <button class="text-sunset-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <span class="ml-4 text-sunset-400 font-semibold">Inventory</span>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden md:ml-0 mt-14 md:mt-0">
+            <!-- Search Header -->
+            <header class="bg-white shadow-sm border-b border-night-200 px-6 py-4">
+                <div class="max-w-2xl mx-auto">
+                    <div class="relative">
+                        <input type="text"
+                               placeholder="Search inventory..."
+                               class="w-full pl-10 pr-4 py-3 border border-night-200 rounded-lg bg-white focus:ring-2 focus:ring-sunset-500 focus:border-transparent placeholder-night-400 text-night-900">
+                        <svg class="absolute left-3 top-3.5 w-5 h-5 text-night-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6 bg-night-100">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Search Results -->
+                    <h2 class="text-sm font-medium text-night-500 mb-4">Results for "M3 screws"</h2>
+
+                    <div class="space-y-3">
+                        <!-- Result Card -->
+                        <div class="bg-white rounded-lg shadow-sm border border-night-200 p-4 hover:shadow-md hover:border-sunset-300 transition-all cursor-pointer">
+                            <div class="flex items-start">
+                                <div class="w-16 h-16 bg-gradient-to-br from-sunset-200 to-sunset-300 rounded-lg flex-shrink-0"></div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-medium text-night-900">M3 Socket Head Screws</h3>
+                                    <p class="text-sm text-night-500">Garage → Hardware Bin</p>
+                                    <div class="flex items-center mt-2">
+                                        <span class="text-sm font-medium text-night-700">~50 pieces</span>
+                                        <span class="ml-3 px-2 py-0.5 bg-sunset-100 text-sunset-700 text-xs rounded">Fasteners</span>
+                                    </div>
+                                </div>
+                                <div class="px-2 py-1 bg-sunset-500 text-white text-sm font-medium rounded">98%</div>
+                            </div>
+                        </div>
+
+                        <!-- Result Card 2 -->
+                        <div class="bg-white rounded-lg shadow-sm border border-night-200 p-4 hover:shadow-md hover:border-sunset-300 transition-all cursor-pointer">
+                            <div class="flex items-start">
+                                <div class="w-16 h-16 bg-gradient-to-br from-sunset-200 to-sunset-300 rounded-lg flex-shrink-0"></div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-medium text-night-900">M3 Nuts</h3>
+                                    <p class="text-sm text-night-500">Garage → Hardware Bin</p>
+                                    <div class="flex items-center mt-2">
+                                        <span class="text-sm font-medium text-night-700">~30 pieces</span>
+                                        <span class="ml-3 px-2 py-0.5 bg-sunset-100 text-sunset-700 text-xs rounded">Fasteners</span>
+                                    </div>
+                                </div>
+                                <div class="px-2 py-1 bg-sunset-400 text-white text-sm font-medium rounded">85%</div>
+                            </div>
+                        </div>
+
+                        <!-- Result Card 3 -->
+                        <div class="bg-white rounded-lg shadow-sm border border-night-200 p-4 hover:shadow-md hover:border-sunset-300 transition-all cursor-pointer">
+                            <div class="flex items-start">
+                                <div class="w-16 h-16 bg-gradient-to-br from-sunset-200 to-sunset-300 rounded-lg flex-shrink-0"></div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-medium text-night-900">M3 Standoffs</h3>
+                                    <p class="text-sm text-night-500">Spare Bedroom → Computer Parts</p>
+                                    <div class="flex items-center mt-2">
+                                        <span class="text-sm font-medium text-night-700">12 pieces</span>
+                                        <span class="ml-3 px-2 py-0.5 bg-sunset-100 text-sunset-700 text-xs rounded">Electronics</span>
+                                    </div>
+                                </div>
+                                <div class="px-2 py-1 bg-sunset-300 text-sunset-900 text-sm font-medium rounded">72%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Item Detail Panel -->
+    <div class="hidden fixed inset-y-0 right-0 w-96 bg-white shadow-xl border-l border-night-200">
+        <div class="h-full flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-night-200 bg-night-900">
+                <h2 class="font-semibold text-sunset-400">Item Details</h2>
+                <button class="text-night-400 hover:text-sunset-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="w-full h-48 bg-gradient-to-br from-sunset-300 to-sunset-500 rounded-lg mb-4"></div>
+                <h3 class="text-lg font-medium text-night-900">M3 Socket Head Screws</h3>
+                <p class="text-sm text-night-500 mt-1">Garage → Hardware Bin</p>
+
+                <div class="mt-4 space-y-3">
+                    <div>
+                        <span class="text-sm text-night-500">Quantity</span>
+                        <p class="font-medium text-night-800">~50 pieces</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-night-500">Category</span>
+                        <p class="font-medium text-night-800">Hardware → Fasteners → Screws</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-night-500">Added</span>
+                        <p class="font-medium text-night-800">Jan 13, 2026 by Ron</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="border-t border-night-200 p-4 bg-night-50">
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="px-4 py-2 bg-sunset-600 text-white rounded-lg hover:bg-sunset-700 transition-colors">+ Add</button>
+                    <button class="px-4 py-2 bg-night-200 text-night-700 rounded-lg hover:bg-night-300 transition-colors">- Use</button>
+                    <button class="px-4 py-2 bg-night-200 text-night-700 rounded-lg hover:bg-night-300 transition-colors">Edit</button>
+                    <button class="px-4 py-2 bg-night-200 text-night-700 rounded-lg hover:bg-night-300 transition-colors">Move</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

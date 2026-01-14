@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inventory{% endblock %}</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        protea: {
+                            50:  '#fdf5f5',
+                            100: '#fae8e8',
+                            200: '#f5d0d0',
+                            300: '#ebb5b5',
+                            400: '#dc8f8f',
+                            500: '#c96b6b',
+                            600: '#a94f54',
+                            700: '#8d3f43',
+                            800: '#753538',
+                            900: '#632f31',
+                            950: '#351617',
+                        },
+                        fynbos: {
+                            50:  '#f4f7f4',
+                            100: '#e4ebe4',
+                            200: '#c9d7c9',
+                            300: '#a3b9a3',
+                            400: '#7a967a',
+                            500: '#5c7a5c',
+                            600: '#486248',
+                            700: '#3b4f3b',
+                            800: '#324032',
+                            900: '#2a352a',
+                            950: '#151c15',
+                        },
+                        cream: {
+                            light: '#fefcf8',
+                            DEFAULT: '#f7f2e8',
+                            dark: '#e8dfc8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+
+    <!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-cream min-h-screen">
+    <div class="flex min-h-screen">
+        <!-- Mobile Header -->
+        <header class="lg:hidden fixed top-0 left-0 right-0 z-30 bg-fynbos-800 h-14 flex items-center px-4">
+            <button id="mobile-menu-btn" class="text-protea-300 hover:text-protea-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <span class="ml-4 text-protea-300 font-semibold text-lg">Inventory</span>
+        </header>
+
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebar-overlay" class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-fynbos-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
+            <!-- Logo -->
+            <div class="flex items-center h-16 px-4 bg-fynbos-900">
+                <a href="/" class="text-xl font-semibold text-protea-300 hover:text-protea-200">
+                    Inventory
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-2 py-4 space-y-1">
+                <a href="/"
+                   class="flex items-center px-4 py-3 rounded-lg transition-colors
+                          {% if active_nav == 'search' %}text-cream-light bg-protea-600{% else %}text-fynbos-200 hover:bg-fynbos-700 hover:text-cream-light{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Search
+                </a>
+                <a href="/browse"
+                   class="flex items-center px-4 py-3 rounded-lg transition-colors
+                          {% if active_nav == 'browse' %}text-cream-light bg-protea-600{% else %}text-fynbos-200 hover:bg-fynbos-700 hover:text-cream-light{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    Browse
+                </a>
+                <a href="/history"
+                   class="flex items-center px-4 py-3 rounded-lg transition-colors
+                          {% if active_nav == 'history' %}text-cream-light bg-protea-600{% else %}text-fynbos-200 hover:bg-fynbos-700 hover:text-cream-light{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    History
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-0 mt-14 lg:mt-0">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', path='app.js') }}"></script>
+</body>
+</html>

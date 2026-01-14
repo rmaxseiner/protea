@@ -1,0 +1,224 @@
+/*
+ * Inventory MCP Web UI - Theme CSS Variables
+ *
+ * Color Scheme: King Protea
+ * Inspired by the South African King Protea flower
+ *
+ * Usage: var(--color-name)
+ * Example: background-color: var(--sidebar-bg);
+ */
+
+:root {
+  /* ===========================================
+   * PROTEA - Rose/Coral Tones (Accent Colors)
+   * =========================================== */
+  --protea-50:  #fdf5f5;
+  --protea-100: #fae8e8;
+  --protea-200: #f5d0d0;
+  --protea-300: #ebb5b5;
+  --protea-400: #dc8f8f;
+  --protea-500: #c96b6b;
+  --protea-600: #a94f54;
+  --protea-700: #8d3f43;
+  --protea-800: #753538;
+  --protea-900: #632f31;
+  --protea-950: #351617;
+
+  /* ===========================================
+   * FYNBOS - Forest Green Tones (Base Colors)
+   * =========================================== */
+  --fynbos-50:  #f4f7f4;
+  --fynbos-100: #e4ebe4;
+  --fynbos-200: #c9d7c9;
+  --fynbos-300: #a3b9a3;
+  --fynbos-400: #7a967a;
+  --fynbos-500: #5c7a5c;
+  --fynbos-600: #486248;
+  --fynbos-700: #3b4f3b;
+  --fynbos-800: #324032;
+  --fynbos-900: #2a352a;
+  --fynbos-950: #151c15;
+
+  /* ===========================================
+   * CREAM - Warm Neutral Tones
+   * =========================================== */
+  --cream-light: #fefcf8;
+  --cream:       #f7f2e8;
+  --cream-dark:  #e8dfc8;
+
+  /* ===========================================
+   * SEMANTIC COLORS
+   * =========================================== */
+
+  /* Backgrounds */
+  --sidebar-bg:       var(--fynbos-800);
+  --sidebar-bg-dark:  var(--fynbos-900);
+  --content-bg:       var(--cream);
+  --card-bg:          var(--cream-light);
+  --input-bg:         #ffffff;
+
+  /* Text */
+  --text-primary:     var(--fynbos-900);
+  --text-secondary:   var(--fynbos-500);
+  --text-muted:       var(--fynbos-400);
+  --text-placeholder: var(--fynbos-400);
+  --text-on-dark:     var(--cream-light);
+  --text-on-primary:  var(--cream-light);
+
+  /* Borders */
+  --border-card:      var(--cream-dark);
+  --border-input:     var(--fynbos-200);
+  --border-focus:     var(--protea-600);
+
+  /* Navigation */
+  --nav-text:         var(--fynbos-200);
+  --nav-text-active:  var(--cream-light);
+  --nav-bg-active:    var(--protea-600);
+  --nav-bg-hover:     var(--fynbos-700);
+
+  /* Buttons */
+  --btn-primary-bg:       var(--protea-600);
+  --btn-primary-bg-hover: var(--protea-700);
+  --btn-primary-text:     var(--cream-light);
+
+  --btn-secondary-bg:       var(--fynbos-200);
+  --btn-secondary-bg-hover: var(--fynbos-300);
+  --btn-secondary-text:     var(--fynbos-800);
+
+  /* Match Indicators (Search Results) */
+  --match-high:    var(--protea-500);    /* 80%+ match */
+  --match-high-bg: var(--protea-100);
+  --match-med:     var(--fynbos-400);    /* 60-79% match */
+  --match-med-bg:  var(--fynbos-100);
+  --match-low:     var(--fynbos-300);    /* <60% match */
+  --match-low-bg:  var(--fynbos-50);
+
+  /* Status Colors */
+  --success:       var(--fynbos-500);
+  --success-bg:    var(--fynbos-100);
+  --warning:       var(--protea-400);
+  --warning-bg:    var(--protea-100);
+  --error:         var(--protea-600);
+  --error-bg:      var(--protea-100);
+
+  /* Shadows */
+  --shadow-card:       0 1px 3px 0 rgb(50 64 50 / 0.1), 0 1px 2px -1px rgb(50 64 50 / 0.1);
+  --shadow-card-hover: 0 4px 6px -1px rgb(50 64 50 / 0.1), 0 2px 4px -2px rgb(50 64 50 / 0.1);
+  --shadow-panel:      0 10px 15px -3px rgb(50 64 50 / 0.1), 0 4px 6px -4px rgb(50 64 50 / 0.1);
+
+  /* Spacing */
+  --sidebar-width: 16rem;
+  --panel-width:   24rem;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius:    0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition:      200ms ease;
+}
+
+/* ===========================================
+ * BASE COMPONENT STYLES
+ * =========================================== */
+
+/* Card Component */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--protea-300);
+}
+
+/* Button Primary */
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-bg-hover);
+}
+
+/* Button Secondary */
+.btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background-color: var(--btn-secondary-bg-hover);
+}
+
+/* Input Field */
+.input {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgb(169 79 84 / 0.1);
+}
+
+/* Match Badge */
+.badge-match-high {
+  background-color: var(--match-high-bg);
+  color: var(--match-high);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-match-med {
+  background-color: var(--match-med-bg);
+  color: var(--match-med);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-match-low {
+  background-color: var(--match-low-bg);
+  color: var(--match-low);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Category Tag */
+.tag {
+  background-color: var(--fynbos-100);
+  color: var(--fynbos-700);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+}

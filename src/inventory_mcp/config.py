@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     amazon_partner_tag: str | None = None
     upcitemdb_api_key: str | None = None
 
+    # Web UI settings
+    web_port: int = 8080
+    web_host: str = "0.0.0.0"
+
     model_config = {"env_prefix": "INVENTORY_"}
 
 

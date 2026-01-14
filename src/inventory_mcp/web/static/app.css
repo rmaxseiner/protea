@@ -1,0 +1,71 @@
+/*
+ * Inventory Web UI - Application Styles
+ * Supplements theme.css and Tailwind CSS
+ */
+
+/* htmx loading indicator */
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: block;
+}
+
+.htmx-request.htmx-indicator {
+    display: block;
+}
+
+/* Smooth transitions for sidebar */
+#sidebar {
+    transition: transform 0.2s ease-out;
+}
+
+#sidebar.open {
+    transform: translateX(0);
+}
+
+/* Image loading placeholder */
+img {
+    background-color: var(--fynbos-100, #e4ebe4);
+}
+
+/* Focus styles for accessibility */
+input:focus,
+button:focus,
+a:focus {
+    outline: 2px solid var(--protea-400, #dc8f8f);
+    outline-offset: 2px;
+}
+
+/* Scrollbar styling (webkit) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--cream, #f7f2e8);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--fynbos-300, #a3b9a3);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--fynbos-400, #7a967a);
+}
+
+/* Print styles */
+@media print {
+    #sidebar,
+    #mobile-menu-btn,
+    .htmx-indicator {
+        display: none !important;
+    }
+
+    main {
+        margin-left: 0 !important;
+    }
+}

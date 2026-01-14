@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout A: Sossusvlei Sand Dune Theme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Sossusvlei Sand Dune Palette
+                        // Inspired by: terracotta dunes, deep shadows, blue sky, sandy ground, sage scrub
+                        dune: {
+                            50: '#fdf8f3',   // Lightest sand
+                            100: '#f9ede0',  // Light sand
+                            200: '#f0d9c4',  // Warm sand
+                            300: '#e4bc9a',  // Golden sand
+                            400: '#d49a6a',  // Terracotta light
+                            500: '#c17a45',  // Terracotta
+                            600: '#a85d2d',  // Burnt orange
+                            700: '#8b4722',  // Deep terracotta
+                            800: '#5c3420',  // Shadow brown
+                            900: '#3d251a',  // Deep shadow
+                            950: '#271610',  // Darkest shadow
+                        },
+                        sky: {
+                            light: '#d4e5ed',  // Pale sky
+                            DEFAULT: '#8bb8cc', // Desert sky blue
+                            dark: '#5a94ad',   // Deeper sky
+                        },
+                        sage: {
+                            light: '#c5cbb8',  // Light sage
+                            DEFAULT: '#8a9576', // Desert scrub
+                            dark: '#5d6650',   // Dark sage
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="bg-dune-100">
+    <!--
+    SOSSUSVLEI SAND DUNE THEME
+
+    Palette:
+    - Sidebar: Deep shadow browns (dune-900, dune-950)
+    - Sidebar active: Terracotta (dune-600)
+    - Content bg: Light sand (dune-100)
+    - Cards: Lightest sand (dune-50)
+    - Accents: Desert sky blue, sage green
+    - Match indicators: Sky blue for high, sage for medium
+    -->
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-dune-900">
+                <!-- Logo/Brand -->
+                <div class="flex items-center h-16 px-4 bg-dune-950">
+                    <span class="text-xl font-semibold text-dune-100">Inventory</span>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+                    <a href="#search" class="flex items-center px-4 py-3 text-dune-50 bg-dune-700 rounded-lg">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Search
+                    </a>
+                    <a href="#browse" class="flex items-center px-4 py-3 text-dune-300 hover:bg-dune-800 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        Browse Rooms
+                    </a>
+                    <a href="#history" class="flex items-center px-4 py-3 text-dune-300 hover:bg-dune-800 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        History
+                    </a>
+                </nav>
+
+                <!-- User Section -->
+                <div class="flex items-center px-4 py-3 bg-dune-950">
+                    <div class="w-8 h-8 bg-dune-600 rounded-full flex items-center justify-center text-dune-50 text-sm font-medium">R</div>
+                    <span class="ml-3 text-dune-200 text-sm">Ron</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Mobile Header -->
+        <div class="md:hidden fixed top-0 left-0 right-0 z-10 bg-dune-900 h-14 flex items-center px-4">
+            <button class="text-dune-100">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <span class="ml-4 text-dune-100 font-semibold">Inventory</span>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden md:ml-0 mt-14 md:mt-0">
+            <!-- Search Header -->
+            <header class="bg-dune-50 shadow-sm border-b border-dune-200 px-6 py-4">
+                <div class="max-w-2xl mx-auto">
+                    <div class="relative">
+                        <input type="text"
+                               placeholder="Search inventory..."
+                               class="w-full pl-10 pr-4 py-3 border border-dune-300 rounded-lg bg-white focus:ring-2 focus:ring-dune-500 focus:border-transparent placeholder-dune-400 text-dune-900">
+                        <svg class="absolute left-3 top-3.5 w-5 h-5 text-dune-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6 bg-dune-100">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Search Results -->
+                    <h2 class="text-sm font-medium text-dune-600 mb-4">Results for "M3 screws"</h2>
+
+                    <div class="space-y-3">
+                        <!-- Result Card -->
+                        <div class="bg-dune-50 rounded-lg shadow-sm border border-dune-200 p-4 hover:shadow-md hover:border-dune-300 transition-all cursor-pointer">
+                            <div class="flex items-start">
+                                <div class="w-16 h-16 bg-dune-200 rounded-lg flex-shrink-0"></div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-medium text-dune-900">M3 Socket Head Screws</h3>
+                                    <p class="text-sm text-dune-500">Garage → Hardware Bin</p>
+                                    <div class="flex items-center mt-2">
+                                        <span class="text-sm font-medium text-dune-700">~50 pieces</span>
+                                        <span class="ml-3 px-2 py-0.5 bg-dune-200 text-dune-700 text-xs rounded">Fasteners</span>
+                                    </div>
+                                </div>
+                                <div class="px-2 py-1 bg-sky-light text-sky-dark text-sm font-medium rounded">98%</div>
+                            </div>
+                        </div>
+
+                        <!-- Result Card 2 -->
+                        <div class="bg-dune-50 rounded-lg shadow-sm border border-dune-200 p-4 hover:shadow-md hover:border-dune-300 transition-all cursor-pointer">
+                            <div class="flex items-start">
+                                <div class="w-16 h-16 bg-dune-200 rounded-lg flex-shrink-0"></div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-medium text-dune-900">M3 Nuts</h3>
+                                    <p class="text-sm text-dune-500">Garage → Hardware Bin</p>
+                                    <div class="flex items-center mt-2">
+                                        <span class="text-sm font-medium text-dune-700">~30 pieces</span>
+                                        <span class="ml-3 px-2 py-0.5 bg-dune-200 text-dune-700 text-xs rounded">Fasteners</span>
+                                    </div>
+                                </div>
+                                <div class="px-2 py-1 bg-sky-light text-sky-dark text-sm font-medium rounded">85%</div>
+                            </div>
+                        </div>
+
+                        <!-- Result Card 3 -->
+                        <div class="bg-dune-50 rounded-lg shadow-sm border border-dune-200 p-4 hover:shadow-md hover:border-dune-300 transition-all cursor-pointer">
+                            <div class="flex items-start">
+                                <div class="w-16 h-16 bg-dune-200 rounded-lg flex-shrink-0"></div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-medium text-dune-900">M3 Standoffs</h3>
+                                    <p class="text-sm text-dune-500">Spare Bedroom → Computer Parts</p>
+                                    <div class="flex items-center mt-2">
+                                        <span class="text-sm font-medium text-dune-700">12 pieces</span>
+                                        <span class="ml-3 px-2 py-0.5 bg-dune-200 text-dune-700 text-xs rounded">Electronics</span>
+                                    </div>
+                                </div>
+                                <div class="px-2 py-1 bg-sage-light text-sage-dark text-sm font-medium rounded">72%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Item Detail Panel -->
+    <div class="hidden fixed inset-y-0 right-0 w-96 bg-dune-50 shadow-xl border-l border-dune-200">
+        <div class="h-full flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-dune-200 bg-dune-100">
+                <h2 class="font-semibold text-dune-900">Item Details</h2>
+                <button class="text-dune-400 hover:text-dune-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="w-full h-48 bg-dune-200 rounded-lg mb-4"></div>
+                <h3 class="text-lg font-medium text-dune-900">M3 Socket Head Screws</h3>
+                <p class="text-sm text-dune-500 mt-1">Garage → Hardware Bin</p>
+
+                <div class="mt-4 space-y-3">
+                    <div>
+                        <span class="text-sm text-dune-500">Quantity</span>
+                        <p class="font-medium text-dune-800">~50 pieces</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-dune-500">Category</span>
+                        <p class="font-medium text-dune-800">Hardware → Fasteners → Screws</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-dune-500">Added</span>
+                        <p class="font-medium text-dune-800">Jan 13, 2026 by Ron</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="border-t border-dune-200 p-4 bg-dune-100">
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="px-4 py-2 bg-dune-600 text-dune-50 rounded-lg hover:bg-dune-700 transition-colors">+ Add</button>
+                    <button class="px-4 py-2 bg-dune-200 text-dune-700 rounded-lg hover:bg-dune-300 transition-colors">- Use</button>
+                    <button class="px-4 py-2 bg-dune-200 text-dune-700 rounded-lg hover:bg-dune-300 transition-colors">Edit</button>
+                    <button class="px-4 py-2 bg-dune-200 text-dune-700 rounded-lg hover:bg-dune-300 transition-colors">Move</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
