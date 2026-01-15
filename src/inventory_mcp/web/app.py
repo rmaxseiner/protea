@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from inventory_mcp import __version__
 from inventory_mcp.config import settings
 from inventory_mcp.db.connection import Database
 from inventory_mcp.services.image_store import ImageStore
@@ -19,6 +20,7 @@ STATIC_DIR = WEB_DIR / "static"
 
 # Global templates instance
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.globals["app_version"] = __version__
 
 
 @asynccontextmanager
