@@ -50,26 +50,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Make nav links work properly on mobile
+    // Nav links - just close sidebar, let browser handle navigation naturally
     if (sidebar) {
-        const navLinks = sidebar.querySelectorAll('nav a');
-        navLinks.forEach(function(link) {
-            // Handle touch events for better mobile responsiveness
-            link.addEventListener('touchend', function(e) {
-                // Close sidebar after a brief delay to allow navigation
-                if (window.innerWidth < 1024 && sidebar.classList.contains('open')) {
-                    setTimeout(closeSidebar, 50);
-                }
-                // Let the default navigation behavior happen
-            });
-            link.addEventListener('click', function(e) {
-                // For non-touch devices, close sidebar on click
-                if (window.innerWidth < 1024 && sidebar.classList.contains('open')) {
-                    setTimeout(closeSidebar, 50);
-                }
-                // Let the default navigation behavior happen
-            });
-        });
+        var navLinks = sidebar.querySelectorAll('nav a');
+        for (var i = 0; i < navLinks.length; i++) {
+            (function(link) {
+                link.addEventListener('click', function() {
+                    // Close sidebar on mobile, navigation happens automatically
+                    if (window.innerWidth < 1024) {
+                        closeSidebar();
+                    }
+                });
+            })(navLinks[i]);
+        }
     }
 
     // Auto-focus search input on page load
@@ -101,12 +94,24 @@ function initLightbox() {
         `;
         document.body.appendChild(lightbox);
 
-        // Close button
-        document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+        // Close button - handle both click and touch
+        var closeBtn = document.getElementById('lightbox-close');
+        closeBtn.addEventListener('click', closeLightbox);
+        closeBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            closeLightbox();
+        });
 
-        // Click outside image to close
-        document.getElementById('lightbox-container').addEventListener('click', function(e) {
+        // Click/touch outside image to close
+        var container = document.getElementById('lightbox-container');
+        container.addEventListener('click', function(e) {
             if (e.target === this) {
+                closeLightbox();
+            }
+        });
+        container.addEventListener('touchend', function(e) {
+            if (e.target === this) {
+                e.preventDefault();
                 closeLightbox();
             }
         });
@@ -119,13 +124,22 @@ function initLightbox() {
         });
     }
 
-    // Add click handlers to all lightbox-enabled images
+    // Add click/touch handlers to all lightbox-enabled images
     document.querySelectorAll('[data-lightbox]').forEach(function(img) {
         img.style.cursor = 'zoom-in';
-        img.addEventListener('click', function(e) {
+
+        function handleImageTap(e) {
             e.preventDefault();
             e.stopPropagation();
-            openLightbox(this.dataset.lightbox || this.src);
+            openLightbox(img.dataset.lightbox || img.src);
+        }
+
+        img.addEventListener('click', handleImageTap);
+        img.addEventListener('touchend', function(e) {
+            // Only handle single touch
+            if (e.changedTouches && e.changedTouches.length === 1) {
+                handleImageTap(e);
+            }
         });
     });
 }
