@@ -4,36 +4,21 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('[Inventory] DOMContentLoaded fired');
-
     // Mobile menu toggle
     const menuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
 
-    console.log('[Inventory] Elements found:', {
-        menuBtn: !!menuBtn,
-        sidebar: !!sidebar,
-        overlay: !!overlay
-    });
-
     function openSidebar() {
-        console.log('[Inventory] openSidebar called');
-        if (!sidebar || !overlay) {
-            console.log('[Inventory] Missing elements, aborting');
-            return;
-        }
-        console.log('[Inventory] Sidebar classes before:', sidebar.className);
+        if (!sidebar || !overlay) return;
         sidebar.classList.add('open', 'translate-x-0');
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden');
         overlay.classList.add('pointer-events-auto');
         document.body.style.overflow = 'hidden';
-        console.log('[Inventory] Sidebar classes after:', sidebar.className);
     }
 
     function closeSidebar() {
-        console.log('[Inventory] closeSidebar called');
         if (!sidebar || !overlay) return;
         sidebar.classList.remove('open', 'translate-x-0');
         sidebar.classList.add('-translate-x-full');
@@ -43,18 +28,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (menuBtn) {
-        console.log('[Inventory] Adding event listeners to menuBtn');
-        menuBtn.addEventListener('click', function(e) {
-            console.log('[Inventory] menuBtn click event fired');
-            openSidebar();
-        });
+        menuBtn.addEventListener('click', openSidebar);
         menuBtn.addEventListener('touchend', function(e) {
-            console.log('[Inventory] menuBtn touchend event fired');
             e.preventDefault();
             openSidebar();
         });
-    } else {
-        console.log('[Inventory] menuBtn not found!');
     }
 
     if (overlay) {
@@ -99,10 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Lightbox for images
 function initLightbox() {
-    console.log('[Inventory] initLightbox called');
     // Create lightbox elements if they don't exist
     if (!document.getElementById('lightbox')) {
-        console.log('[Inventory] Creating lightbox element');
         const lightbox = document.createElement('div');
         lightbox.id = 'lightbox';
         lightbox.className = 'fixed inset-0 z-[100] bg-black bg-opacity-95 hidden flex items-center justify-center';
@@ -150,13 +126,11 @@ function initLightbox() {
 
     // Add click/touch handlers to all lightbox-enabled images
     var lightboxImages = document.querySelectorAll('[data-lightbox]');
-    console.log('[Inventory] Found ' + lightboxImages.length + ' lightbox images');
 
     lightboxImages.forEach(function(img) {
         img.style.cursor = 'zoom-in';
 
         function handleImageTap(e) {
-            console.log('[Inventory] Image tap/click detected', img.dataset.lightbox || img.src);
             e.preventDefault();
             e.stopPropagation();
             openLightbox(img.dataset.lightbox || img.src);
@@ -164,7 +138,6 @@ function initLightbox() {
 
         img.addEventListener('click', handleImageTap);
         img.addEventListener('touchend', function(e) {
-            console.log('[Inventory] Image touchend, touches:', e.changedTouches ? e.changedTouches.length : 0);
             // Only handle single touch
             if (e.changedTouches && e.changedTouches.length === 1) {
                 handleImageTap(e);
@@ -174,13 +147,9 @@ function initLightbox() {
 }
 
 function openLightbox(src) {
-    console.log('[Inventory] openLightbox called with src:', src);
     const lightbox = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
-    if (!lightbox || !img) {
-        console.log('[Inventory] Lightbox elements missing!');
-        return;
-    }
+    if (!lightbox || !img) return;
 
     img.src = src;
     lightbox.classList.remove('hidden');
