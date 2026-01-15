@@ -15,6 +15,7 @@ from inventory_mcp.db.models import (
     Location,
     QuantityType,
 )
+from inventory_mcp.services import embedding_service
 from inventory_mcp.tools.bins import _build_bin_path, _get_bin_ancestors
 
 
@@ -232,13 +233,19 @@ def add_item(
         notes=notes,
     )
 
+    # Generate embedding for semantic search
+    embedding_blob = None
+    if embedding_service.is_available():
+        item_text = embedding_service.build_item_text(name, description, notes)
+        embedding_blob = embedding_service.generate_embedding(item_text)
+
     with db.connection() as conn:
         conn.execute(
             """
             INSERT INTO items
             (id, name, description, category_id, bin_id, quantity_type, quantity_value,
-             quantity_label, source, source_reference, photo_url, notes, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             quantity_label, source, source_reference, photo_url, notes, created_at, updated_at, embedding)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.id,
@@ -255,6 +262,7 @@ def add_item(
                 item.notes,
                 item.created_at.isoformat(),
                 item.updated_at.isoformat(),
+                embedding_blob,
             ),
         )
 
@@ -370,26 +378,60 @@ def update_item(
     new_notes = notes if notes is not None else row["notes"]
     updated_at = datetime.utcnow()
 
+    # Check if text fields changed - if so, regenerate embedding
+    text_changed = (
+        new_name != row["name"]
+        or new_description != row["description"]
+        or new_notes != row["notes"]
+    )
+
+    embedding_blob = None
+    if text_changed and embedding_service.is_available():
+        item_text = embedding_service.build_item_text(new_name, new_description, new_notes)
+        embedding_blob = embedding_service.generate_embedding(item_text)
+
     with db.connection() as conn:
-        conn.execute(
-            """
-            UPDATE items
-            SET name = ?, category_id = ?, quantity_type = ?, quantity_value = ?,
-                quantity_label = ?, description = ?, notes = ?, updated_at = ?
-            WHERE id = ?
-            """,
-            (
-                new_name,
-                new_category_id,
-                new_quantity_type,
-                new_quantity_value,
-                new_quantity_label,
-                new_description,
-                new_notes,
-                updated_at.isoformat(),
-                item_id,
-            ),
-        )
+        if text_changed and embedding_blob is not None:
+            conn.execute(
+                """
+                UPDATE items
+                SET name = ?, category_id = ?, quantity_type = ?, quantity_value = ?,
+                    quantity_label = ?, description = ?, notes = ?, updated_at = ?, embedding = ?
+                WHERE id = ?
+                """,
+                (
+                    new_name,
+                    new_category_id,
+                    new_quantity_type,
+                    new_quantity_value,
+                    new_quantity_label,
+                    new_description,
+                    new_notes,
+                    updated_at.isoformat(),
+                    embedding_blob,
+                    item_id,
+                ),
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE items
+                SET name = ?, category_id = ?, quantity_type = ?, quantity_value = ?,
+                    quantity_label = ?, description = ?, notes = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    new_name,
+                    new_category_id,
+                    new_quantity_type,
+                    new_quantity_value,
+                    new_quantity_label,
+                    new_description,
+                    new_notes,
+                    updated_at.isoformat(),
+                    item_id,
+                ),
+            )
 
     # Log activity
     _log_activity(db, item_id, ActivityAction.UPDATED)
@@ -619,13 +661,21 @@ def move_item(
             notes=row["notes"],
         )
 
+        # Generate embedding for the new split item
+        embedding_blob = None
+        if embedding_service.is_available():
+            item_text = embedding_service.build_item_text(
+                new_item.name, new_item.description, new_item.notes
+            )
+            embedding_blob = embedding_service.generate_embedding(item_text)
+
         with db.connection() as conn:
             conn.execute(
                 """
                 INSERT INTO items
                 (id, name, description, category_id, bin_id, quantity_type, quantity_value,
-                 quantity_label, source, source_reference, photo_url, notes, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 quantity_label, source, source_reference, photo_url, notes, created_at, updated_at, embedding)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     new_item.id,
@@ -642,6 +692,7 @@ def move_item(
                     new_item.notes,
                     new_item.created_at.isoformat(),
                     new_item.updated_at.isoformat(),
+                    embedding_blob,
                 ),
             )
 
