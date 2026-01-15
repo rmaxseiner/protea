@@ -12,9 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml README.md ./
 COPY src/ ./src/
 
-# Install the package
+# Install the package with embeddings support (CPU-only PyTorch for smaller image)
 RUN pip install --no-cache-dir build && \
-    pip install --no-cache-dir .
+    pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu ".[embeddings]"
 
 # Runtime stage
 FROM python:3.12-slim
