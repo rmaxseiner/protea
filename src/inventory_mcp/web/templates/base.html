@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Inventory{% endblock %}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +68,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
             </button>
-            <span class="ml-2 text-protea-300 font-semibold text-lg">Inventory</span>
+            <div class="ml-2 flex items-center gap-2">
+                <img src="/static/favicon.svg" alt="" class="w-6 h-6">
+                <span class="text-protea-300 font-semibold text-lg">Inventory</span>
+            </div>
         </header>
 
         <!-- Sidebar Overlay (mobile) -->
@@ -75,8 +81,9 @@
         <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-fynbos-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
             <!-- Logo -->
             <div class="flex items-center h-16 px-4 bg-fynbos-900">
-                <a href="/" class="text-xl font-semibold text-protea-300 hover:text-protea-200">
-                    Inventory
+                <a href="/" class="flex items-center gap-2 text-xl font-semibold text-protea-300 hover:text-protea-200">
+                    <img src="/static/favicon.svg" alt="" class="w-8 h-8">
+                    <span>Inventory</span>
                 </a>
             </div>
 
