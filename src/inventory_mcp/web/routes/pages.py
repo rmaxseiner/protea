@@ -80,15 +80,123 @@ async def item_detail_page(
     if isinstance(history, dict):
         history = []
 
+    # Get all bins for move dropdown (grouped by location)
+    all_bins = []
+    locations = locations_tools.get_locations(db)
+    for loc in locations:
+        loc_bins = bins_tools.get_bins(db, location_id=loc.id)
+        for b in loc_bins:
+            all_bins.append({
+                "id": b.id,
+                "name": b.name,
+                "location_name": loc.name,
+                "is_current": b.id == result.bin_id,
+            })
+
     return templates.TemplateResponse(
         request=request,
         name="item.html",
         context={
             "item": result,
             "history": history,
+            "all_bins": all_bins,
             "active_nav": "search",
         },
     )
+
+
+@router.post("/item/{item_id}/move")
+async def move_item(
+    request: Request,
+    item_id: str,
+    to_bin_id: str = Form(...),
+    notes: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Handle move item form submission."""
+    result = items_tools.move_item(
+        db=db,
+        item_id=item_id,
+        to_bin_id=to_bin_id,
+        notes=notes if notes else None,
+    )
+
+    # Redirect back to item page
+    if isinstance(result, dict) and "error" in result:
+        return RedirectResponse(
+            url=f"/item/{item_id}?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/item/{item_id}", status_code=303)
+
+
+@router.post("/item/{item_id}/add-quantity")
+async def add_quantity(
+    request: Request,
+    item_id: str,
+    quantity: int = Form(default=1),
+    notes: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Handle add quantity form submission."""
+    # Get current item to find current quantity
+    item = items_tools.get_item(db, item_id)
+    if isinstance(item, dict) and "error" in item:
+        return RedirectResponse(
+            url=f"/item/{item_id}?error={item['error']}",
+            status_code=303,
+        )
+
+    # Calculate new quantity
+    current_qty = item.quantity_value or 0
+    new_qty = current_qty + quantity
+
+    # Update item with new quantity
+    result = items_tools.update_item(
+        db=db,
+        item_id=item_id,
+        quantity_value=new_qty,
+    )
+
+    # Log the addition manually since update_item logs "updated" not "added"
+    from inventory_mcp.db.models import ActivityAction
+    from inventory_mcp.tools.items import _log_activity
+    _log_activity(
+        db=db,
+        item_id=item_id,
+        action=ActivityAction.ADDED,
+        quantity_change=quantity,
+        notes=notes if notes else None,
+    )
+
+    return RedirectResponse(url=f"/item/{item_id}", status_code=303)
+
+
+@router.post("/item/{item_id}/use")
+async def use_item(
+    request: Request,
+    item_id: str,
+    quantity: int = Form(default=1),
+    notes: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Handle use item form submission."""
+    result = items_tools.use_item(
+        db=db,
+        item_id=item_id,
+        quantity=quantity,
+        notes=notes if notes else None,
+    )
+
+    # Redirect back to item page
+    if isinstance(result, dict) and "error" in result:
+        return RedirectResponse(
+            url=f"/item/{item_id}?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/item/{item_id}", status_code=303)
 
 
 @router.post("/item/{item_id}/edit")

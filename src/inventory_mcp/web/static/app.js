@@ -175,15 +175,63 @@ document.body.addEventListener('htmx:afterSwap', function(event) {
     initLightbox();
 });
 
+// Helper to hide all item action forms
+function hideAllItemForms() {
+    var forms = ['edit-form', 'use-form', 'add-form', 'move-form'];
+    forms.forEach(function(id) {
+        var form = document.getElementById(id);
+        if (form) form.classList.add('hidden');
+    });
+}
+
 // Toggle edit form visibility on item detail page
 function toggleEditForm() {
     var editForm = document.getElementById('edit-form');
-    var actionButtons = document.getElementById('action-buttons');
-    if (editForm && actionButtons) {
-        editForm.classList.toggle('hidden');
-        // Scroll to form when showing
-        if (!editForm.classList.contains('hidden')) {
+    if (editForm) {
+        var wasHidden = editForm.classList.contains('hidden');
+        hideAllItemForms();
+        if (wasHidden) {
+            editForm.classList.remove('hidden');
             editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}
+
+// Toggle use item form visibility
+function toggleUseForm() {
+    var useForm = document.getElementById('use-form');
+    if (useForm) {
+        var wasHidden = useForm.classList.contains('hidden');
+        hideAllItemForms();
+        if (wasHidden) {
+            useForm.classList.remove('hidden');
+            useForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}
+
+// Toggle add quantity form visibility
+function toggleAddForm() {
+    var addForm = document.getElementById('add-form');
+    if (addForm) {
+        var wasHidden = addForm.classList.contains('hidden');
+        hideAllItemForms();
+        if (wasHidden) {
+            addForm.classList.remove('hidden');
+            addForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}
+
+// Toggle move item form visibility
+function toggleMoveForm() {
+    var moveForm = document.getElementById('move-form');
+    if (moveForm) {
+        var wasHidden = moveForm.classList.contains('hidden');
+        hideAllItemForms();
+        if (wasHidden) {
+            moveForm.classList.remove('hidden');
+            moveForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 }
