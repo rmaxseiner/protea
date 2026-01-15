@@ -174,3 +174,16 @@ document.body.addEventListener('htmx:afterSwap', function(event) {
     // Re-init lightbox for dynamically loaded content
     initLightbox();
 });
+
+// Toggle edit form visibility on item detail page
+function toggleEditForm() {
+    var editForm = document.getElementById('edit-form');
+    var actionButtons = document.getElementById('action-buttons');
+    if (editForm && actionButtons) {
+        editForm.classList.toggle('hidden');
+        // Scroll to form when showing
+        if (!editForm.classList.contains('hidden')) {
+            editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}

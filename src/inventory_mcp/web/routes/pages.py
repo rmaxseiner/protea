@@ -91,6 +91,41 @@ async def item_detail_page(
     )
 
 
+@router.post("/item/{item_id}/edit")
+async def edit_item(
+    request: Request,
+    item_id: str,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    quantity_type: str = Form(...),
+    quantity_value: int = Form(default=1),
+    quantity_label: str = Form(default=""),
+    notes: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Handle item edit form submission."""
+    result = items_tools.update_item(
+        db=db,
+        item_id=item_id,
+        name=name,
+        description=description if description else None,
+        quantity_type=quantity_type,
+        quantity_value=quantity_value,
+        quantity_label=quantity_label if quantity_label else None,
+        notes=notes if notes else None,
+    )
+
+    # Redirect back to item page
+    if isinstance(result, dict) and "error" in result:
+        # TODO: Flash error message
+        return RedirectResponse(
+            url=f"/item/{item_id}?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/item/{item_id}", status_code=303)
+
+
 @router.get("/browse", response_class=HTMLResponse)
 async def browse_page(request: Request, db: Database = Depends(get_db)):
     """Render browse page with location/bin tree."""
