@@ -55,6 +55,16 @@
 
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Eruda mobile debugger (enabled with ?debug=1) -->
+    <script>
+        if (window.location.search.includes('debug=1')) {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            script.onload = function() { eruda.init(); };
+            document.head.appendChild(script);
+        }
+    </script>
 </head>
 <body class="bg-cream min-h-screen">
     <div class="flex min-h-screen">
