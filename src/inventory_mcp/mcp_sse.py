@@ -64,6 +64,8 @@ def main():
         host=settings.mcp_sse_host,
         port=settings.mcp_sse_port,
         log_level="info",
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )
 
 

@@ -13,6 +13,8 @@ def main():
         app,
         host=settings.web_host,
         port=settings.web_port,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )
 
 
