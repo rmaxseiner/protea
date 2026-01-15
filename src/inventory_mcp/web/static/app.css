@@ -25,6 +25,13 @@
     transform: translateX(0);
 }
 
+/* Mobile touch improvements for navigation */
+#sidebar nav a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(169, 79, 84, 0.3);
+    user-select: none;
+}
+
 /* Image loading placeholder */
 img {
     background-color: var(--fynbos-100, #e4ebe4);

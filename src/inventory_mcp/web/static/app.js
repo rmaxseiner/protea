@@ -54,12 +54,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sidebar) {
         const navLinks = sidebar.querySelectorAll('nav a');
         navLinks.forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                // Let the link navigate normally, just close sidebar first
+            // Handle touch events for better mobile responsiveness
+            link.addEventListener('touchend', function(e) {
+                // Close sidebar after a brief delay to allow navigation
                 if (window.innerWidth < 1024 && sidebar.classList.contains('open')) {
-                    closeSidebar();
+                    setTimeout(closeSidebar, 50);
                 }
-                // Don't prevent default - let navigation happen
+                // Let the default navigation behavior happen
+            });
+            link.addEventListener('click', function(e) {
+                // For non-touch devices, close sidebar on click
+                if (window.innerWidth < 1024 && sidebar.classList.contains('open')) {
+                    setTimeout(closeSidebar, 50);
+                }
+                // Let the default navigation behavior happen
             });
         });
     }
