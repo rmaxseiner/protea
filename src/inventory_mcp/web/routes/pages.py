@@ -326,6 +326,60 @@ async def browse_bin_page(
     )
 
 
+@router.post("/browse/bin/{bin_id}/create-child")
+async def create_child_bin(
+    request: Request,
+    bin_id: str,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Create a child bin inside the current bin."""
+    # Get parent bin to find location_id
+    parent_bin = bins_tools.get_bin(db, bin_id=bin_id, include_items=False)
+    if isinstance(parent_bin, dict) and "error" in parent_bin:
+        return RedirectResponse(
+            url=f"/browse/bin/{bin_id}?error={parent_bin['error']}",
+            status_code=303,
+        )
+
+    result = bins_tools.create_bin(
+        db=db,
+        name=name,
+        location_id=parent_bin.location_id,
+        parent_bin_id=bin_id,
+        description=description if description else None,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return RedirectResponse(
+            url=f"/browse/bin/{bin_id}?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/browse/bin/{bin_id}", status_code=303)
+
+
+@router.post("/browse/bin/{bin_id}/delete-child/{child_id}")
+async def delete_child_bin(
+    request: Request,
+    bin_id: str,
+    child_id: str,
+    db: Database = Depends(get_db),
+):
+    """Delete a child bin."""
+    result = bins_tools.delete_bin(db=db, bin_id=child_id)
+
+    if isinstance(result, dict) and not result.get("success"):
+        error_msg = result.get("error", "Failed to delete bin")
+        return RedirectResponse(
+            url=f"/browse/bin/{bin_id}?error={error_msg}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/browse/bin/{bin_id}", status_code=303)
+
+
 @router.post("/browse/bin/{bin_id}/upload-image")
 async def upload_bin_image(
     request: Request,
