@@ -144,7 +144,7 @@
         <!-- Add Sub-bin Form -->
         <div class="bg-cream-light rounded-xl border border-cream-dark p-4">
             <h3 class="font-medium text-fynbos-800 mb-3">Add Sub-bin</h3>
-            <form action="/browse/bin/{{ bin.id }}/create-child" method="post" class="space-y-4">
+            <form id="add-subbin-form" action="/browse/bin/{{ bin.id }}/create-child" method="post" class="space-y-4">
                 <div>
                     <label for="child_name" class="block text-sm text-fynbos-600 mb-1">Name</label>
                     <input type="text"
@@ -162,12 +162,30 @@
                            placeholder="What's in this sub-bin?"
                            class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
                 </div>
-                <button type="submit"
-                        class="w-full bg-fynbos-600 hover:bg-fynbos-700 active:bg-fynbos-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
-                    Add Sub-bin
-                </button>
+                <div class="flex gap-2">
+                    <button type="submit"
+                            class="flex-1 bg-fynbos-600 hover:bg-fynbos-700 active:bg-fynbos-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                        Add Sub-bin
+                    </button>
+                    <button type="button"
+                            onclick="goToQuickAdd()"
+                            class="flex-1 bg-protea-600 hover:bg-protea-700 active:bg-protea-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                        Quick Add
+                    </button>
+                </div>
             </form>
         </div>
+        <script>
+        function goToQuickAdd() {
+            const name = document.getElementById('child_name').value;
+            const description = document.getElementById('child_description').value;
+            const params = new URLSearchParams();
+            if (name) params.append('name', name);
+            if (description) params.append('description', description);
+            const queryString = params.toString();
+            window.location.href = '/browse/bin/{{ bin.id }}/quick-add' + (queryString ? '?' + queryString : '');
+        }
+        </script>
     </div>
 
     <!-- Bin Images Section -->

@@ -7,7 +7,7 @@ import zipfile
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
 
 from inventory_mcp.config import settings
 from inventory_mcp.db.connection import Database
@@ -701,6 +701,129 @@ async def download_bin_images(
             "Content-Disposition": f'attachment; filename="{root_name}-images.zip"'
         }
     )
+
+
+# =============================================================================
+# Quick Add Sub-bins Routes
+# =============================================================================
+
+
+@router.get("/browse/bin/{bin_id}/quick-add", response_class=HTMLResponse)
+async def quick_add_page(
+    request: Request,
+    bin_id: str,
+    name: str = "",
+    description: str = "",
+    db: Database = Depends(get_db),
+):
+    """Render quick add sub-bins page."""
+    parent_bin = bins_tools.get_bin(db, bin_id=bin_id)
+
+    if isinstance(parent_bin, dict) and "error" in parent_bin:
+        return RedirectResponse(url=f"/browse/bin/{bin_id}", status_code=303)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="quick_add.html",
+        context={
+            "parent_bin": parent_bin,
+            "prefill_name": name,
+            "prefill_description": description,
+            "active_nav": "browse",
+        },
+    )
+
+
+@router.post("/browse/bin/{bin_id}/quick-add/save")
+async def quick_add_save_bin(
+    request: Request,
+    bin_id: str,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """AJAX: Create a new sub-bin and return its ID."""
+    # Get parent bin to find location_id
+    parent_bin = bins_tools.get_bin(db, bin_id=bin_id)
+    if isinstance(parent_bin, dict) and "error" in parent_bin:
+        return JSONResponse(
+            {"success": False, "error": parent_bin["error"]},
+            status_code=400,
+        )
+
+    result = bins_tools.create_bin(
+        db=db,
+        name=name,
+        location_id=parent_bin.location_id,
+        parent_bin_id=bin_id,
+        description=description if description else None,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return JSONResponse(
+            {"success": False, "error": result["error"]},
+            status_code=400,
+        )
+
+    return JSONResponse({
+        "success": True,
+        "bin_id": result.id,
+        "bin_name": result.name,
+    })
+
+
+@router.post("/browse/bin/{bin_id}/quick-add/upload-photo/{child_bin_id}")
+async def quick_add_upload_photo(
+    request: Request,
+    bin_id: str,
+    child_bin_id: str,
+    image: UploadFile,
+    db: Database = Depends(get_db),
+    image_store: ImageStore = Depends(get_image_store),
+):
+    """AJAX: Upload a photo to a bin created via quick-add."""
+    # Read and encode the image
+    contents = await image.read()
+    image_base64 = base64.b64encode(contents).decode("utf-8")
+
+    # Check if this is the first image (make it primary)
+    existing_images = bins_tools.get_bin_images(db, child_bin_id)
+    is_primary = not existing_images or len(existing_images) == 0
+
+    # Add the image to the bin
+    result = bins_tools.add_bin_image(
+        db=db,
+        image_store=image_store,
+        bin_id=child_bin_id,
+        image_base64=image_base64,
+        caption=None,
+        is_primary=is_primary,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return JSONResponse(
+            {"success": False, "error": result["error"]},
+            status_code=400,
+        )
+
+    return JSONResponse({
+        "success": True,
+        "image_id": result.id,
+        "file_path": result.file_path,
+    })
+
+
+@router.post("/browse/bin/{bin_id}/quick-add/delete-photo/{image_id}")
+async def quick_add_delete_photo(
+    request: Request,
+    bin_id: str,
+    image_id: str,
+    db: Database = Depends(get_db),
+    image_store: ImageStore = Depends(get_image_store),
+):
+    """AJAX: Delete a photo from a bin in quick-add mode."""
+    bins_tools.remove_bin_image(db=db, image_store=image_store, image_id=image_id)
+    return JSONResponse({"success": True})
 
 
 @router.get("/history", response_class=HTMLResponse)
