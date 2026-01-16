@@ -40,6 +40,88 @@ image_store = ImageStore(
 server = Server("inventory-mcp")
 
 
+def _process_bin_images(bin_id: str, context: str | None = None) -> dict:
+    """Process all images for a bin using Claude vision.
+
+    Args:
+        bin_id: Bin UUID
+        context: Optional context hint
+
+    Returns:
+        Dict with extracted items from all images
+    """
+    import base64
+    from pathlib import Path
+
+    # Get bin images
+    bin_images = bins.get_bin_images(db, bin_id)
+    if isinstance(bin_images, dict) and "error" in bin_images:
+        return bin_images
+
+    if not bin_images:
+        return {
+            "error": "No images found for this bin",
+            "error_code": "NO_IMAGES",
+            "details": {"bin_id": bin_id},
+        }
+
+    all_items = []
+    all_labels = []
+    all_suggestions = []
+    processed_images = 0
+    failed_images = []
+
+    for bin_image in bin_images:
+        image_path = Path(settings.image_base_path) / bin_image.file_path
+
+        if not image_path.exists():
+            failed_images.append({
+                "image_id": bin_image.id,
+                "error": "Image file not found",
+            })
+            continue
+
+        try:
+            # Read and encode image
+            with open(image_path, "rb") as f:
+                image_data = f.read()
+            image_base64 = base64.b64encode(image_data).decode("utf-8")
+
+            # Extract items using vision
+            result = vision.extract_items_from_image(image_base64, context)
+
+            if isinstance(result, dict) and "error" in result:
+                failed_images.append({
+                    "image_id": bin_image.id,
+                    "error": result.get("error"),
+                })
+                continue
+
+            # Collect results
+            all_items.extend(result.get("items", []))
+            all_labels.extend(result.get("labels_detected", []))
+            if result.get("suggestions"):
+                all_suggestions.append(result["suggestions"])
+            processed_images += 1
+
+        except Exception as e:
+            logger.error(f"Error processing image {bin_image.id}: {e}")
+            failed_images.append({
+                "image_id": bin_image.id,
+                "error": str(e),
+            })
+
+    return {
+        "bin_id": bin_id,
+        "images_processed": processed_images,
+        "images_failed": len(failed_images),
+        "items": all_items,
+        "labels_detected": list(set(all_labels)),
+        "suggestions": all_suggestions,
+        "failed_images": failed_images if failed_images else None,
+    }
+
+
 def _serialize_result(result: Any) -> str:
     """Serialize a result to JSON string."""
     if hasattr(result, "model_dump"):
@@ -555,6 +637,57 @@ TOOLS = [
             "required": ["code"],
         },
     ),
+    # Bin Images
+    Tool(
+        name="get_bin_images",
+        description="Get all images for a bin. Use this to see what photos have been uploaded to a bin.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "bin_id": {"type": "string", "description": "Bin UUID"},
+            },
+            "required": ["bin_id"],
+        },
+    ),
+    Tool(
+        name="process_bin_images",
+        description="Process all images for a bin using Claude vision to extract inventory items. Returns list of detected items with quantities and categories. Use this after photos have been uploaded to a bin via the web UI.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "bin_id": {"type": "string", "description": "Bin UUID"},
+                "context": {"type": "string", "description": "Optional context hint (e.g., 'this is an electronics drawer')"},
+            },
+            "required": ["bin_id"],
+        },
+    ),
+    Tool(
+        name="add_items_bulk",
+        description="Add multiple items to a bin at once. Use this after processing bin images to add all extracted items.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "bin_id": {"type": "string", "description": "Target bin UUID"},
+                "items": {
+                    "type": "array",
+                    "description": "List of items to add",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string", "description": "Item name"},
+                            "quantity_type": {"type": "string", "enum": ["exact", "approximate", "boolean"]},
+                            "quantity_value": {"type": "integer"},
+                            "quantity_label": {"type": "string"},
+                            "description": {"type": "string"},
+                            "category_id": {"type": "string"},
+                        },
+                        "required": ["name"],
+                    },
+                },
+            },
+            "required": ["bin_id", "items"],
+        },
+    ),
 ]
 
 
@@ -676,6 +809,14 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
     # Product lookup
     elif name == "lookup_product":
         return vision.lookup_product(**arguments)
+
+    # Bin image tools
+    elif name == "get_bin_images":
+        return bins.get_bin_images(db, **arguments)
+    elif name == "process_bin_images":
+        return _process_bin_images(**arguments)
+    elif name == "add_items_bulk":
+        return items.add_items_bulk(db, **arguments)
 
     else:
         return {"error": f"Unknown tool: {name}", "error_code": "NOT_FOUND"}
