@@ -1,10 +1,15 @@
 """Page routes for web UI."""
 
 import base64
+import io
+import re
+import zipfile
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 
+from inventory_mcp.config import settings
 from inventory_mcp.db.connection import Database
 from inventory_mcp.services.image_store import ImageStore
 from inventory_mcp.tools import bins as bins_tools
@@ -439,6 +444,139 @@ async def set_primary_bin_image(
     """Set an image as the primary image for a bin."""
     bins_tools.set_primary_bin_image(db=db, bin_id=bin_id, image_id=image_id)
     return RedirectResponse(url=f"/browse/bin/{bin_id}", status_code=303)
+
+
+def _sanitize_name(name: str) -> str:
+    """Sanitize name for filesystem: replace spaces with dashes, remove special chars."""
+    # Replace spaces with dashes
+    name = name.replace(" ", "-")
+    # Remove characters that are problematic in filenames
+    name = re.sub(r'[<>:"/\\|?*]', '', name)
+    return name
+
+
+def _get_bin_path(db: Database, bin_id: str) -> list[str]:
+    """Get the full path of bin names from root to this bin."""
+    path = []
+    current_id = bin_id
+
+    while current_id:
+        bin_row = db.execute_one(
+            "SELECT id, name, parent_bin_id, location_id FROM bins WHERE id = ?",
+            (current_id,)
+        )
+        if not bin_row:
+            break
+        path.insert(0, bin_row["name"])
+        current_id = bin_row["parent_bin_id"]
+
+    return path
+
+
+def _get_all_child_bins(db: Database, bin_id: str) -> list[dict]:
+    """Recursively get all child bins."""
+    children = []
+
+    rows = db.execute(
+        "SELECT id, name FROM bins WHERE parent_bin_id = ?",
+        (bin_id,)
+    )
+
+    for row in rows:
+        children.append({"id": row["id"], "name": row["name"]})
+        children.extend(_get_all_child_bins(db, row["id"]))
+
+    return children
+
+
+@router.get("/browse/bin/{bin_id}/download-images")
+async def download_bin_images(
+    request: Request,
+    bin_id: str,
+    db: Database = Depends(get_db),
+):
+    """Download all images from a bin and its children as a zip file."""
+    # Get the bin
+    bin_data = bins_tools.get_bin(db, bin_id=bin_id)
+    if isinstance(bin_data, dict) and "error" in bin_data:
+        return RedirectResponse(
+            url=f"/browse/bin/{bin_id}?error=Bin not found",
+            status_code=303
+        )
+
+    # Get the path to this bin for folder structure
+    bin_path = _get_bin_path(db, bin_id)
+
+    # Collect all bins to process (this bin + all children)
+    bins_to_process = [{"id": bin_id, "name": bin_data.name, "path": bin_path}]
+
+    # Get all child bins recursively
+    def add_children(parent_id: str, parent_path: list[str]):
+        rows = db.execute(
+            "SELECT id, name FROM bins WHERE parent_bin_id = ?",
+            (parent_id,)
+        )
+        for row in rows:
+            child_path = parent_path + [row["name"]]
+            bins_to_process.append({
+                "id": row["id"],
+                "name": row["name"],
+                "path": child_path
+            })
+            add_children(row["id"], child_path)
+
+    add_children(bin_id, bin_path)
+
+    # Create zip file in memory
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for bin_info in bins_to_process:
+            # Build sanitized folder path
+            folder_path = "/".join(_sanitize_name(p) for p in bin_info["path"])
+            sanitized_bin_name = _sanitize_name(bin_info["name"])
+
+            # Get images for this bin
+            images = bins_tools.get_bin_images(db, bin_info["id"])
+            if isinstance(images, dict) and "error" in images:
+                images = []
+
+            if not images:
+                # Create empty folder with .gitkeep or similar placeholder
+                zip_file.writestr(f"{folder_path}/.empty", "")
+            else:
+                # Add images with proper naming
+                for idx, image in enumerate(images):
+                    image_path = Path(settings.image_base_path) / image.file_path
+
+                    if not image_path.exists():
+                        continue
+
+                    # Determine extension from file
+                    ext = image_path.suffix or ".jpg"
+
+                    # Build filename: bin-name.jpg or bin-name-1.jpg, bin-name-2.jpg
+                    if len(images) == 1:
+                        filename = f"{sanitized_bin_name}{ext}"
+                    else:
+                        filename = f"{sanitized_bin_name}-{idx + 1}{ext}"
+
+                    # Add to zip
+                    zip_file.write(image_path, f"{folder_path}/{filename}")
+
+    # Prepare response
+    zip_buffer.seek(0)
+
+    # Generate filename for the zip
+    root_name = _sanitize_name(bin_data.name)
+
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{root_name}-images.zip"'
+        }
+    )
 
 
 @router.get("/history", response_class=HTMLResponse)
