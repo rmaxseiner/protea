@@ -3,6 +3,18 @@
  * Supplements theme.css and Tailwind CSS
  */
 
+/* Mobile font size scaling - improves readability on small screens */
+@media (max-width: 640px) {
+    html {
+        font-size: 18px; /* Base 16px → 18px on mobile */
+    }
+
+    /* Ensure inputs don't zoom on iOS (needs 16px minimum) */
+    input, select, textarea {
+        font-size: 16px;
+    }
+}
+
 /* htmx loading indicator */
 .htmx-indicator {
     display: none;
