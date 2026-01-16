@@ -45,7 +45,7 @@
                         {% for part in item.bin_path_parts %}
                             {% if not loop.first %} <span class="text-fynbos-400">&rarr;</span> {% endif %}
                             {% if part.type == "location" %}
-                                <a href="/browse" class="hover:text-protea-600 hover:underline">{{ part.name }}</a>
+                                <a href="/browse/location/{{ part.id }}" class="hover:text-protea-600 hover:underline">{{ part.name }}</a>
                             {% else %}
                                 <a href="/browse/bin/{{ part.id }}" class="hover:text-protea-600 hover:underline">{{ part.name }}</a>
                             {% endif %}

@@ -298,6 +298,130 @@ async def browse_page(request: Request, db: Database = Depends(get_db)):
     )
 
 
+@router.get("/browse/location/{location_id}", response_class=HTMLResponse)
+async def browse_location_page(
+    request: Request,
+    location_id: str,
+    error: str = None,
+    db: Database = Depends(get_db),
+):
+    """Render location detail page."""
+    result = locations_tools.get_location(db, location_id=location_id)
+
+    if isinstance(result, dict) and "error" in result:
+        return templates.TemplateResponse(
+            request=request,
+            name="location.html",
+            context={
+                "error": result["error"],
+                "location": None,
+                "active_nav": "browse",
+            },
+            status_code=404,
+        )
+
+    # Get bins in this location (top-level only, not nested)
+    bins = bins_tools.get_bins(db, location_id=location_id)
+
+    # Count items in each bin
+    bins_with_counts = []
+    for b in bins:
+        item_count = db.execute_one(
+            "SELECT COUNT(*) as cnt FROM items WHERE bin_id = ?", (b.id,)
+        )["cnt"]
+        # Count child bins
+        child_count = db.execute_one(
+            "SELECT COUNT(*) as cnt FROM bins WHERE parent_bin_id = ?", (b.id,)
+        )["cnt"]
+        bins_with_counts.append({
+            "id": b.id,
+            "name": b.name,
+            "description": b.description,
+            "item_count": item_count,
+            "child_count": child_count,
+        })
+
+    return templates.TemplateResponse(
+        request=request,
+        name="location.html",
+        context={
+            "location": result,
+            "bins": bins_with_counts,
+            "active_nav": "browse",
+            "error_message": error,
+        },
+    )
+
+
+@router.post("/browse/location/{location_id}/edit")
+async def edit_location(
+    request: Request,
+    location_id: str,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Handle location edit form submission."""
+    result = locations_tools.update_location(
+        db=db,
+        location_id=location_id,
+        name=name,
+        description=description if description else None,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return RedirectResponse(
+            url=f"/browse/location/{location_id}?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/browse/location/{location_id}", status_code=303)
+
+
+@router.post("/browse/location/{location_id}/delete")
+async def delete_location(
+    request: Request,
+    location_id: str,
+    db: Database = Depends(get_db),
+):
+    """Handle location delete."""
+    result = locations_tools.delete_location(db=db, location_id=location_id)
+
+    if isinstance(result, dict) and not result.get("success"):
+        error_msg = result.get("error", "Failed to delete location")
+        return RedirectResponse(
+            url=f"/browse/location/{location_id}?error={error_msg}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url="/browse", status_code=303)
+
+
+@router.post("/browse/location/{location_id}/create-bin")
+async def create_location_bin(
+    request: Request,
+    location_id: str,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Create a new bin in this location."""
+    result = bins_tools.create_bin(
+        db=db,
+        name=name,
+        location_id=location_id,
+        description=description if description else None,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return RedirectResponse(
+            url=f"/browse/location/{location_id}?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/browse/location/{location_id}", status_code=303)
+
+
 @router.get("/browse/bin/{bin_id}", response_class=HTMLResponse)
 async def browse_bin_page(
     request: Request,

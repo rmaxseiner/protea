@@ -59,23 +59,31 @@
         {% for loc_data in locations %}
         <div class="bg-cream-light rounded-xl border border-cream-dark overflow-hidden">
             <!-- Location Header -->
-            <div class="bg-fynbos-100 px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <svg class="w-6 h-6 text-fynbos-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <div>
-                        <h2 class="font-semibold text-fynbos-900">{{ loc_data.location.name }}</h2>
-                        {% if loc_data.location.description %}
-                        <p class="text-sm text-fynbos-500">{{ loc_data.location.description }}</p>
-                        {% endif %}
+            <a href="/browse/location/{{ loc_data.location.id }}"
+               class="block bg-fynbos-100 px-4 py-3 hover:bg-fynbos-200 transition-colors">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-6 h-6 text-fynbos-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <div>
+                            <h2 class="font-semibold text-fynbos-900">{{ loc_data.location.name }}</h2>
+                            {% if loc_data.location.description %}
+                            <p class="text-sm text-fynbos-500">{{ loc_data.location.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-fynbos-200 text-fynbos-700 text-sm px-2 py-1 rounded">
+                            {{ loc_data.bin_count }} bin{% if loc_data.bin_count != 1 %}s{% endif %}
+                        </span>
+                        <svg class="w-5 h-5 text-fynbos-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
                     </div>
                 </div>
-                <span class="bg-fynbos-200 text-fynbos-700 text-sm px-2 py-1 rounded">
-                    {{ loc_data.bin_count }} bin{% if loc_data.bin_count != 1 %}s{% endif %}
-                </span>
-            </div>
+            </a>
 
             <!-- Bins Tree -->
             {% if loc_data.bins_tree %}

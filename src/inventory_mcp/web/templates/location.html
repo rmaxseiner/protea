@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}{% if location %}{{ location.name }}{% else %}Location Not Found{% endif %} - Inventory{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-6 max-w-4xl mx-auto">
+    <!-- Breadcrumb Navigation -->
+    <nav class="mb-6">
+        <ol class="flex items-center flex-wrap text-sm">
+            <li class="flex items-center">
+                <a href="/browse" class="text-fynbos-500 hover:text-protea-600 hover:underline">Browse</a>
+            </li>
+            {% if location %}
+            <li class="flex items-center">
+                <svg class="w-4 h-4 mx-2 text-fynbos-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <span class="font-medium text-fynbos-800">{{ location.name }}</span>
+            </li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    {% if error %}
+    <!-- Error State -->
+    <div class="bg-protea-50 border border-protea-200 rounded-xl p-6 text-center">
+        <svg class="w-12 h-12 mx-auto text-protea-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <h2 class="text-xl font-semibold text-protea-700">{{ error }}</h2>
+        <p class="text-protea-500 mt-2">The location you're looking for doesn't exist or has been removed.</p>
+    </div>
+
+    {% else %}
+
+    {% if error_message %}
+    <!-- Action Error Alert -->
+    <div class="bg-protea-50 border border-protea-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-protea-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <p class="text-protea-700">{{ error_message }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Location Header -->
+    <div class="bg-cream-light rounded-xl border border-cream-dark overflow-hidden mb-6">
+        <div class="bg-fynbos-100 px-6 py-4">
+            <div class="flex items-center gap-3">
+                <svg class="w-8 h-8 text-fynbos-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <div>
+                    <h1 class="text-2xl font-bold text-fynbos-900">{{ location.name }}</h1>
+                </div>
+            </div>
+            {% if location.description %}
+            <p class="mt-3 text-fynbos-600">{{ location.description }}</p>
+            {% endif %}
+        </div>
+
+        <div class="px-6 py-4 flex items-center gap-6 text-sm">
+            <div>
+                <span class="text-fynbos-500">Bins:</span>
+                <span class="font-medium text-fynbos-800">{{ bins|length }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mb-6">
+        <div id="action-buttons" class="flex flex-wrap gap-2">
+            <button type="button" onclick="toggleEditForm()" class="px-4 py-2 bg-protea-600 text-white rounded-lg hover:bg-protea-700 transition-colors">
+                Edit Location
+            </button>
+            {% if bins|length == 0 %}
+            <form action="/browse/location/{{ location.id }}/delete" method="post" class="inline"
+                  onsubmit="return confirm('Delete location \'{{ location.name }}\'? This cannot be undone.')">
+                <button type="submit" class="px-4 py-2 bg-protea-600 text-white rounded-lg hover:bg-protea-700 transition-colors">
+                    Delete Location
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Edit Location Form (hidden by default) -->
+    <div id="edit-form" class="hidden bg-cream-light rounded-xl border border-cream-dark p-4 mb-6">
+        <h3 class="font-medium text-fynbos-800 mb-3">Edit Location</h3>
+        <form action="/browse/location/{{ location.id }}/edit" method="post" class="space-y-4">
+            <div>
+                <label for="name" class="block text-sm text-fynbos-600 mb-1">Name</label>
+                <input type="text"
+                       id="name"
+                       name="name"
+                       value="{{ location.name }}"
+                       required
+                       class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+            <div>
+                <label for="description" class="block text-sm text-fynbos-600 mb-1">Description (optional)</label>
+                <input type="text"
+                       id="description"
+                       name="description"
+                       value="{{ location.description or '' }}"
+                       placeholder="Describe this location..."
+                       class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="bg-protea-600 hover:bg-protea-700 active:bg-protea-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                    Save Changes
+                </button>
+                <button type="button" onclick="toggleEditForm()"
+                        class="bg-fynbos-200 hover:bg-fynbos-300 text-fynbos-700 px-4 py-2 rounded-lg transition-colors font-medium">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bins Section -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-fynbos-900 mb-4">Bins in this Location</h2>
+
+        {% if bins %}
+        <div class="bg-cream-light rounded-xl border border-cream-dark overflow-hidden mb-4">
+            {% for bin in bins %}
+            <a href="/browse/bin/{{ bin.id }}"
+               class="flex items-center justify-between px-4 py-3 hover:bg-fynbos-50 transition-colors
+                      {% if not loop.last %}border-b border-cream-dark{% endif %}">
+                <div class="flex items-center gap-3">
+                    {% if bin.child_count > 0 %}
+                    <svg class="w-5 h-5 text-fynbos-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    {% else %}
+                    <svg class="w-5 h-5 text-fynbos-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    {% endif %}
+                    <div>
+                        <span class="font-medium text-fynbos-800">{{ bin.name }}</span>
+                        {% if bin.description %}
+                        <p class="text-sm text-fynbos-500">{{ bin.description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    {% if bin.child_count > 0 %}
+                    <span class="text-xs text-fynbos-400 bg-fynbos-100 px-2 py-0.5 rounded">
+                        {{ bin.child_count }} sub-bin{% if bin.child_count != 1 %}s{% endif %}
+                    </span>
+                    {% endif %}
+                    <span class="text-sm text-fynbos-500">
+                        {{ bin.item_count }} item{% if bin.item_count != 1 %}s{% endif %}
+                    </span>
+                    <svg class="w-5 h-5 text-fynbos-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-fynbos-500 text-sm mb-4">No bins in this location yet.</p>
+        {% endif %}
+
+        <!-- Add Bin Form -->
+        <div class="bg-cream-light rounded-xl border border-cream-dark p-4">
+            <h3 class="font-medium text-fynbos-800 mb-3">Add New Bin</h3>
+            <form action="/browse/location/{{ location.id }}/create-bin" method="post" class="space-y-4">
+                <div>
+                    <label for="bin_name" class="block text-sm text-fynbos-600 mb-1">Name</label>
+                    <input type="text"
+                           id="bin_name"
+                           name="name"
+                           required
+                           placeholder="e.g., Tool Chest, Shelf A..."
+                           class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+                </div>
+                <div>
+                    <label for="bin_description" class="block text-sm text-fynbos-600 mb-1">Description (optional)</label>
+                    <input type="text"
+                           id="bin_description"
+                           name="description"
+                           placeholder="What's in this bin?"
+                           class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+                </div>
+                <button type="submit"
+                        class="w-full bg-fynbos-600 hover:bg-fynbos-700 active:bg-fynbos-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                    Add Bin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<script>
+function toggleEditForm() {
+    const form = document.getElementById('edit-form');
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+</script>
+{% endblock %}
