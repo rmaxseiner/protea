@@ -295,7 +295,7 @@ def list_items(
         bin_id: Filter by bin
         location_id: Filter by location
         category_id: Filter by category
-        include_children: Include items in subcategories
+        include_children: Include items in child bins and subcategories
 
     Returns:
         List of items with their locations
@@ -304,8 +304,26 @@ def list_items(
     filter_clauses = []
 
     if bin_id:
-        filter_clauses.append("i.bin_id = ?")
-        params.append(bin_id)
+        if include_children:
+            # Get all child bin IDs recursively
+            def get_child_bin_ids(parent_id: str) -> list[str]:
+                children = db.execute(
+                    "SELECT id FROM bins WHERE parent_bin_id = ?",
+                    (parent_id,),
+                )
+                child_ids = [row["id"] for row in children]
+                all_ids = list(child_ids)
+                for child_id in child_ids:
+                    all_ids.extend(get_child_bin_ids(child_id))
+                return all_ids
+
+            all_bin_ids = [bin_id] + get_child_bin_ids(bin_id)
+            placeholders = ",".join("?" * len(all_bin_ids))
+            filter_clauses.append(f"i.bin_id IN ({placeholders})")
+            params.extend(all_bin_ids)
+        else:
+            filter_clauses.append("i.bin_id = ?")
+            params.append(bin_id)
 
     if location_id:
         filter_clauses.append("b.location_id = ?")
