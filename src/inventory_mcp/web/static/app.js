@@ -4,6 +4,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize browse tree if on browse page
+    if (document.querySelector('[data-page="browse"]')) {
+        initBrowseTree();
+    }
+
     // Mobile menu toggle
     const menuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.getElementById('sidebar');
@@ -303,4 +308,95 @@ function toggleMoveForm() {
             moveForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
+}
+
+// ============================================
+// Browse Tree Collapse/Expand Functions
+// ============================================
+
+// Toggle location expand/collapse
+function toggleLocation(locationId) {
+    var container = document.getElementById('location-bins-' + locationId);
+    var chevron = document.querySelector('[data-location-toggle="' + locationId + '"]');
+    if (!container) return;
+
+    var isExpanded = !container.classList.contains('hidden');
+
+    container.classList.toggle('hidden');
+    if (chevron) {
+        chevron.classList.toggle('rotate-90');
+    }
+
+    saveExpandState('location', locationId, !isExpanded);
+}
+
+// Toggle parent bin expand/collapse
+function toggleBin(binId) {
+    var container = document.getElementById('bin-children-' + binId);
+    var chevron = document.querySelector('[data-bin-toggle="' + binId + '"]');
+    if (!container) return;
+
+    var isExpanded = !container.classList.contains('hidden');
+
+    container.classList.toggle('hidden');
+    if (chevron) {
+        chevron.classList.toggle('rotate-90');
+    }
+
+    saveExpandState('bin', binId, !isExpanded);
+}
+
+// Save expand/collapse state to localStorage
+function saveExpandState(type, id, isExpanded) {
+    var key = 'browseTreeState';
+    var state = {};
+    try {
+        state = JSON.parse(localStorage.getItem(key) || '{}');
+    } catch (e) {
+        state = {};
+    }
+    state[type + '-' + id] = isExpanded;
+    try {
+        localStorage.setItem(key, JSON.stringify(state));
+    } catch (e) {
+        // localStorage might be full or unavailable
+    }
+}
+
+// Initialize browse tree from saved state
+function initBrowseTree() {
+    var state = {};
+    try {
+        state = JSON.parse(localStorage.getItem('browseTreeState') || '{}');
+    } catch (e) {
+        state = {};
+    }
+
+    // Restore expanded locations and bins
+    Object.keys(state).forEach(function(key) {
+        if (state[key]) {
+            var parts = key.split('-');
+            var type = parts[0];
+            var id = parts.slice(1).join('-'); // Handle IDs with dashes
+            if (type === 'location') {
+                var container = document.getElementById('location-bins-' + id);
+                var chevron = document.querySelector('[data-location-toggle="' + id + '"]');
+                if (container) {
+                    container.classList.remove('hidden');
+                    if (chevron) {
+                        chevron.classList.add('rotate-90');
+                    }
+                }
+            } else if (type === 'bin') {
+                var container = document.getElementById('bin-children-' + id);
+                var chevron = document.querySelector('[data-bin-toggle="' + id + '"]');
+                if (container) {
+                    container.classList.remove('hidden');
+                    if (chevron) {
+                        chevron.classList.add('rotate-90');
+                    }
+                }
+            }
+        }
+    });
 }

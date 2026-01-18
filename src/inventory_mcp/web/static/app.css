@@ -76,6 +76,15 @@ a:focus {
     background: var(--fynbos-400, #7a967a);
 }
 
+/* Chevron rotation for expand/collapse */
+.toggle-chevron {
+    transition: transform 0.2s ease;
+}
+
+.toggle-chevron.rotate-90 {
+    transform: rotate(90deg);
+}
+
 /* Print styles */
 @media print {
     #sidebar,
