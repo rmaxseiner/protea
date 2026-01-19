@@ -1,6 +1,7 @@
 name: Build, Push and Deploy Container
 
 on:
+  workflow_dispatch:  # Manual trigger from Gitea UI
   push:
     branches:
       - main
