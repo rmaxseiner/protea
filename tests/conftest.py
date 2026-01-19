@@ -1,13 +1,13 @@
-"""Pytest fixtures for inventory-mcp tests."""
+"""Pytest fixtures for protea tests."""
 
 import tempfile
 from pathlib import Path
 
 import pytest
 
-from inventory_mcp.config import Settings
-from inventory_mcp.db.connection import Database
-from inventory_mcp.services.image_store import ImageStore
+from protea.config import Settings
+from protea.db.connection import Database
+from protea.services.image_store import ImageStore
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_image_store(test_settings):
 @pytest.fixture
 def sample_location(test_db):
     """Create a sample location for testing."""
-    from inventory_mcp.tools import locations
+    from protea.tools import locations
 
     return locations.create_location(
         db=test_db,
@@ -55,7 +55,7 @@ def sample_location(test_db):
 @pytest.fixture
 def sample_bin(test_db, sample_location):
     """Create a sample bin for testing."""
-    from inventory_mcp.tools import bins
+    from protea.tools import bins
 
     return bins.create_bin(
         db=test_db,
@@ -68,7 +68,7 @@ def sample_bin(test_db, sample_location):
 @pytest.fixture
 def sample_category(test_db):
     """Create a sample category for testing."""
-    from inventory_mcp.tools import categories
+    from protea.tools import categories
 
     return categories.create_category(
         db=test_db,

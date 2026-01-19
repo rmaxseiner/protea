@@ -1,6 +1,6 @@
-# Inventory MCP Server
+# Protea Inventory System
 
-MCP server for physical inventory management with vision support.
+MCP-powered physical inventory management with vision support.
 
 ## Installation
 
@@ -11,7 +11,14 @@ pip install -e ".[dev]"
 ## Usage
 
 ```bash
-inventory-mcp
+# MCP server (stdio)
+protea
+
+# Web UI
+protea-web
+
+# MCP SSE server
+protea-sse
 ```
 
-See `docs/inventory-mcp-spec.md` for full documentation.
+See `docs/protea-spec.md` for full documentation.

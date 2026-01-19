@@ -2,7 +2,7 @@
 
 import pytest
 
-from inventory_mcp.tools import locations
+from protea.tools import locations
 
 
 def test_create_location(test_db):

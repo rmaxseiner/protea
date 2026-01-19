@@ -33,7 +33,7 @@ RUN useradd --create-home --shell /bin/bash appuser
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin/inventory-* /usr/local/bin/
+COPY --from=builder /usr/local/bin/protea* /usr/local/bin/
 
 # Copy source and entrypoint
 COPY src/ ./src/

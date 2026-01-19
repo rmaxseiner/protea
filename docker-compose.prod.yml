@@ -2,9 +2,9 @@
 # Usage: docker compose -f docker-compose.prod.yml up -d
 
 services:
-  inventory-web:
-    image: git.maxseiner.casa/ron-maxseiner/inventory-mcp:latest
-    container_name: inventory-web
+  protea-web:
+    image: git.maxseiner.casa/ron-maxseiner/protea:latest
+    container_name: protea-web
     restart: unless-stopped
     ports:
       - "8080:8080"

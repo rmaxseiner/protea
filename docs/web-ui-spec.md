@@ -1,4 +1,4 @@
-# Inventory Web UI - Technical Specification
+# Protea Web UI - Technical Specification
 
 **Version:** 1.1
 **Date:** January 13, 2026
@@ -305,7 +305,7 @@ ALTER TABLE activity_log ADD COLUMN user_id TEXT REFERENCES users(id);
 
 ### Project Structure
 ```
-src/inventory_mcp/
+src/protea/
 ├── web/
 │   ├── __init__.py
 │   ├── app.py              # FastAPI app setup
@@ -425,7 +425,7 @@ volumes:
 
 ### New Settings
 ```python
-# src/inventory_mcp/config.py (additions)
+# src/protea/config.py (additions)
 
 class Settings(BaseSettings):
     # ... existing settings ...

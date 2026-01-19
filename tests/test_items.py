@@ -2,8 +2,8 @@
 
 import pytest
 
-from inventory_mcp.db.models import QuantityType
-from inventory_mcp.tools import items
+from protea.db.models import QuantityType
+from protea.tools import items
 
 
 def test_add_item(test_db, sample_bin):
@@ -118,7 +118,7 @@ def test_use_item_reduces_to_zero(test_db, sample_bin):
 
 def test_move_item(test_db, sample_location):
     """Test moving an item to another bin."""
-    from inventory_mcp.tools import bins
+    from protea.tools import bins
 
     bin1 = bins.create_bin(db=test_db, name="Bin 1", location_id=sample_location.id)
     bin2 = bins.create_bin(db=test_db, name="Bin 2", location_id=sample_location.id)
@@ -136,7 +136,7 @@ def test_move_item(test_db, sample_location):
 
 def test_move_item_partial(test_db, sample_location):
     """Test moving partial quantity creates new item."""
-    from inventory_mcp.tools import bins
+    from protea.tools import bins
 
     bin1 = bins.create_bin(db=test_db, name="Source", location_id=sample_location.id)
     bin2 = bins.create_bin(db=test_db, name="Dest", location_id=sample_location.id)

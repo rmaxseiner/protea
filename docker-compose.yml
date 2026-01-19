@@ -1,10 +1,10 @@
 services:
-  inventory-web:
+  protea-web:
     build:
       context: .
       dockerfile: Dockerfile
-    image: inventory-mcp:latest
-    container_name: inventory-web
+    image: protea:latest
+    container_name: protea-web
     restart: unless-stopped
     ports:
       - "8080:8080"

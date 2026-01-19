@@ -2,7 +2,7 @@
 
 import pytest
 
-from inventory_mcp.tools import categories
+from protea.tools import categories
 
 
 def test_get_categories(test_db):
@@ -74,7 +74,7 @@ def test_delete_category(test_db):
 
 def test_delete_category_with_items(test_db, sample_bin, sample_category):
     """Test that deleting a category with items fails."""
-    from inventory_mcp.tools import items
+    from protea.tools import items
 
     items.add_item(
         db=test_db,

@@ -2,8 +2,8 @@
 
 import pytest
 
-from inventory_mcp.db.models import SessionStatus
-from inventory_mcp.tools import sessions
+from protea.db.models import SessionStatus
+from protea.tools import sessions
 
 
 def test_create_session(test_db, sample_bin):
@@ -103,7 +103,7 @@ def test_remove_pending_item(test_db, sample_bin):
 
 def test_commit_session(test_db, sample_bin, test_image_store):
     """Test committing a session creates real items."""
-    from inventory_mcp.tools import search
+    from protea.tools import search
 
     session = sessions.create_session(
         db=test_db,
@@ -151,7 +151,7 @@ def test_get_active_sessions(test_db, sample_bin):
 
 def test_set_session_target(test_db, sample_location):
     """Test changing session target."""
-    from inventory_mcp.tools import bins
+    from protea.tools import bins
 
     bin1 = bins.create_bin(db=test_db, name="Target 1", location_id=sample_location.id)
     bin2 = bins.create_bin(db=test_db, name="Target 2", location_id=sample_location.id)

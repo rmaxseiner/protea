@@ -1,1 +1,1 @@
-"""Test package for inventory-mcp."""
+"""Test package for protea."""

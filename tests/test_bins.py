@@ -2,7 +2,7 @@
 
 import pytest
 
-from inventory_mcp.tools import bins
+from protea.tools import bins
 
 
 def test_create_bin(test_db, sample_location):

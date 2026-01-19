@@ -2,7 +2,7 @@
 
 import pytest
 
-from inventory_mcp.tools import items, search
+from protea.tools import items, search
 
 
 def test_search_items_by_name(test_db, sample_bin):
@@ -45,7 +45,7 @@ def test_search_items_by_description(test_db, sample_bin):
 
 def test_search_items_by_alias(test_db, sample_bin):
     """Test searching items by alias."""
-    from inventory_mcp.tools import aliases
+    from protea.tools import aliases
 
     item = items.add_item(
         db=test_db,
