@@ -46,8 +46,24 @@ source .venv/bin/activate
 # Install with dev dependencies
 pip install -e ".[dev]"
 
+# Set up pre-commit hooks (recommended)
+pre-commit install
+
 # Run tests to verify setup
 pytest
+```
+
+### Pre-commit Hooks
+
+We use [pre-commit](https://pre-commit.com/) to run checks before each commit:
+- **Ruff** - Linting and formatting
+- **Pytest** - Run tests
+
+The hooks are configured in `.pre-commit-config.yaml`. After running `pre-commit install`, they run automatically on `git commit`.
+
+To run all hooks manually:
+```bash
+pre-commit run --all-files
 ```
 
 ## Making Changes

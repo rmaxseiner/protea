@@ -1,0 +1,32 @@
+# Pre-commit hooks for Protea
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Ruff - Fast Python linter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Local hooks for project-specific checks
+  - repo: local
+    hooks:
+      # Run tests before commit
+      - id: pytest
+        name: pytest
+        entry: bash -c 'if [ -d ".venv" ]; then .venv/bin/python -m pytest tests/ -x -q --tb=short; else python -m pytest tests/ -x -q --tb=short; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      # Quick test run for faster feedback (skip slow tests if any)
+      - id: pytest-fast
+        name: pytest (fast)
+        entry: bash -c 'if [ -d ".venv" ]; then .venv/bin/python -m pytest tests/ -x -q --tb=short -m "not slow"; else python -m pytest tests/ -x -q --tb=short -m "not slow"; fi'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
