@@ -422,6 +422,128 @@ async def create_location_bin(
     return RedirectResponse(url=f"/browse/location/{location_id}", status_code=303)
 
 
+# =============================================================================
+# Quick Add Bins to Location Routes
+# =============================================================================
+
+
+@router.get("/browse/location/{location_id}/quick-add", response_class=HTMLResponse)
+async def quick_add_location_bins_page(
+    request: Request,
+    location_id: str,
+    name: str = "",
+    description: str = "",
+    db: Database = Depends(get_db),
+):
+    """Render quick add bins to location page."""
+    location = locations_tools.get_location(db, location_id=location_id)
+
+    if isinstance(location, dict) and "error" in location:
+        return RedirectResponse(url=f"/browse/location/{location_id}", status_code=303)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="quick_add_location_bins.html",
+        context={
+            "location": location,
+            "prefill_name": name,
+            "prefill_description": description,
+            "active_nav": "browse",
+        },
+    )
+
+
+@router.post("/browse/location/{location_id}/quick-add/save")
+async def quick_add_location_save_bin(
+    request: Request,
+    location_id: str,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """AJAX: Create a new bin in the location and return its ID."""
+    # Verify location exists
+    location = locations_tools.get_location(db, location_id=location_id)
+    if isinstance(location, dict) and "error" in location:
+        return JSONResponse(
+            {"success": False, "error": location["error"]},
+            status_code=400,
+        )
+
+    result = bins_tools.create_bin(
+        db=db,
+        name=name,
+        location_id=location_id,
+        description=description if description else None,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return JSONResponse(
+            {"success": False, "error": result["error"]},
+            status_code=400,
+        )
+
+    return JSONResponse({
+        "success": True,
+        "bin_id": result.id,
+        "bin_name": result.name,
+    })
+
+
+@router.post("/browse/location/{location_id}/quick-add/upload-photo/{bin_id}")
+async def quick_add_location_upload_photo(
+    request: Request,
+    location_id: str,
+    bin_id: str,
+    image: UploadFile,
+    db: Database = Depends(get_db),
+    image_store: ImageStore = Depends(get_image_store),
+):
+    """AJAX: Upload a photo to a bin created via quick-add."""
+    # Read and encode the image
+    contents = await image.read()
+    image_base64 = base64.b64encode(contents).decode("utf-8")
+
+    # Check if this is the first image (make it primary)
+    existing_images = bins_tools.get_bin_images(db, bin_id)
+    is_primary = not existing_images or len(existing_images) == 0
+
+    # Add the image to the bin
+    result = bins_tools.add_bin_image(
+        db=db,
+        image_store=image_store,
+        bin_id=bin_id,
+        image_base64=image_base64,
+        caption=None,
+        is_primary=is_primary,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return JSONResponse(
+            {"success": False, "error": result["error"]},
+            status_code=400,
+        )
+
+    return JSONResponse({
+        "success": True,
+        "image_id": result.id,
+        "file_path": result.file_path,
+    })
+
+
+@router.post("/browse/location/{location_id}/quick-add/delete-photo/{image_id}")
+async def quick_add_location_delete_photo(
+    request: Request,
+    location_id: str,
+    image_id: str,
+    db: Database = Depends(get_db),
+    image_store: ImageStore = Depends(get_image_store),
+):
+    """AJAX: Delete a photo from a bin in quick-add mode."""
+    bins_tools.remove_bin_image(db=db, image_store=image_store, image_id=image_id)
+    return JSONResponse({"success": True})
+
+
 @router.get("/browse/bin/{bin_id}", response_class=HTMLResponse)
 async def browse_bin_page(
     request: Request,
@@ -453,6 +575,40 @@ async def browse_bin_page(
             "upload_error": error,
         },
     )
+
+
+@router.post("/browse/bin/{bin_id}/add-item")
+async def add_item_to_bin(
+    request: Request,
+    bin_id: str,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    quantity_type: str = Form(default="boolean"),
+    quantity_value: int = Form(default=1),
+    quantity_label: str = Form(default=""),
+    notes: str = Form(default=""),
+    db: Database = Depends(get_db),
+):
+    """Add a new item to a bin from the web UI."""
+    result = items_tools.add_item(
+        db=db,
+        name=name,
+        bin_id=bin_id,
+        description=description if description else None,
+        quantity_type=quantity_type,
+        quantity_value=quantity_value if quantity_type != "boolean" else 1,
+        quantity_label=quantity_label if quantity_label else None,
+        source="manual",
+        notes=notes if notes else None,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        return RedirectResponse(
+            url=f"/browse/bin/{bin_id}?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url=f"/browse/bin/{bin_id}", status_code=303)
 
 
 @router.post("/browse/bin/{bin_id}/create-child")

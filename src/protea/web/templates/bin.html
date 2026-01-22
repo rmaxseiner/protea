@@ -320,7 +320,121 @@
     </div>
 
     <!-- Items List -->
-    <h2 class="text-lg font-semibold text-fynbos-900 mb-4">Items in this bin</h2>
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-fynbos-900">Items in this bin</h2>
+        <button type="button"
+                onclick="toggleAddItemForm()"
+                class="inline-flex items-center gap-2 px-3 py-2 text-sm bg-fynbos-600 hover:bg-fynbos-700 text-white rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add Item
+        </button>
+    </div>
+
+    <!-- Add Item Form (hidden by default) -->
+    <div id="add-item-form" class="hidden bg-cream-light rounded-xl border border-cream-dark p-4 mb-4">
+        <h3 class="font-medium text-fynbos-800 mb-3">Add New Item</h3>
+        <form action="/browse/bin/{{ bin.id }}/add-item" method="post" class="space-y-4">
+            <div>
+                <label for="item_name" class="block text-sm text-fynbos-600 mb-1">Name *</label>
+                <input type="text"
+                       id="item_name"
+                       name="name"
+                       required
+                       placeholder="e.g., M3 Screws, USB Cable..."
+                       class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+
+            <div>
+                <label for="item_description" class="block text-sm text-fynbos-600 mb-1">Description (optional)</label>
+                <input type="text"
+                       id="item_description"
+                       name="description"
+                       placeholder="Brief description of the item..."
+                       class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="quantity_type" class="block text-sm text-fynbos-600 mb-1">Quantity Type</label>
+                    <select id="quantity_type"
+                            name="quantity_type"
+                            onchange="updateQuantityFields()"
+                            class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base bg-white">
+                        <option value="boolean">In Stock (Yes/No)</option>
+                        <option value="exact">Exact Count</option>
+                        <option value="approximate">Approximate</option>
+                    </select>
+                </div>
+
+                <div id="quantity-value-container" class="hidden">
+                    <label for="quantity_value" class="block text-sm text-fynbos-600 mb-1">Quantity</label>
+                    <input type="number"
+                           id="quantity_value"
+                           name="quantity_value"
+                           min="0"
+                           value="1"
+                           class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+                </div>
+            </div>
+
+            <div id="quantity-label-container" class="hidden">
+                <label for="quantity_label" class="block text-sm text-fynbos-600 mb-1">Unit Label (optional)</label>
+                <input type="text"
+                       id="quantity_label"
+                       name="quantity_label"
+                       placeholder="e.g., pieces, meters, rolls..."
+                       class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+
+            <div>
+                <label for="item_notes" class="block text-sm text-fynbos-600 mb-1">Notes (optional)</label>
+                <textarea id="item_notes"
+                          name="notes"
+                          rows="2"
+                          placeholder="Any additional notes..."
+                          class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base resize-none"></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 bg-fynbos-600 hover:bg-fynbos-700 active:bg-fynbos-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                    Add Item
+                </button>
+                <button type="button"
+                        onclick="toggleAddItemForm()"
+                        class="bg-fynbos-200 hover:bg-fynbos-300 text-fynbos-700 px-4 py-2 rounded-lg transition-colors font-medium">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    function toggleAddItemForm() {
+        const form = document.getElementById('add-item-form');
+        form.classList.toggle('hidden');
+        if (!form.classList.contains('hidden')) {
+            document.getElementById('item_name').focus();
+            form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    function updateQuantityFields() {
+        const type = document.getElementById('quantity_type').value;
+        const valueContainer = document.getElementById('quantity-value-container');
+        const labelContainer = document.getElementById('quantity-label-container');
+
+        if (type === 'boolean') {
+            valueContainer.classList.add('hidden');
+            labelContainer.classList.add('hidden');
+        } else {
+            valueContainer.classList.remove('hidden');
+            labelContainer.classList.remove('hidden');
+        }
+    }
+    </script>
 
     {% if bin.items %}
     <div class="space-y-3">
@@ -379,7 +493,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
         </svg>
         <h3 class="text-lg font-semibold text-fynbos-700">No Items Yet</h3>
-        <p class="text-fynbos-500 mt-2">Add items to this bin through Claude Desktop.</p>
+        <p class="text-fynbos-500 mt-2">Click "Add Item" above or add items through Claude Desktop.</p>
     </div>
     {% endif %}
 

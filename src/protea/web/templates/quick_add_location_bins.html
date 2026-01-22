@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Add Bins - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="/browse/location/{{ location.id }}" class="inline-flex items-center text-fynbos-500 hover:text-protea-600 mb-2">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to {{ location.name }}
+        </a>
+        <h1 class="text-2xl font-bold text-fynbos-900">Quick Add Bins</h1>
+        <p class="text-fynbos-500 mt-1">Adding to: <span class="font-medium">{{ location.name }}</span></p>
+    </div>
+
+    <!-- Current Bin Form -->
+    <div class="bg-cream-light rounded-xl border border-cream-dark p-4 mb-6">
+        <h2 class="font-semibold text-fynbos-800 mb-4">New Bin</h2>
+
+        <div class="space-y-4">
+            <!-- Name -->
+            <div>
+                <label for="bin_name" class="block text-sm text-fynbos-600 mb-1">Name *</label>
+                <input type="text"
+                       id="bin_name"
+                       value="{{ prefill_name }}"
+                       required
+                       placeholder="e.g., Tool Chest, Shelf A, Drawer 1..."
+                       class="w-full px-3 py-3 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="bin_description" class="block text-sm text-fynbos-600 mb-1">Description (optional)</label>
+                <input type="text"
+                       id="bin_description"
+                       value="{{ prefill_description }}"
+                       placeholder="What's in this bin?"
+                       class="w-full px-3 py-3 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+
+            <!-- Save Button -->
+            <button type="button"
+                    id="save-bin-btn"
+                    onclick="saveBin()"
+                    class="w-full bg-fynbos-600 hover:bg-fynbos-700 active:bg-fynbos-800 text-white px-4 py-3 rounded-lg transition-colors font-medium">
+                Save Bin
+            </button>
+        </div>
+    </div>
+
+    <!-- Photos Section (hidden until bin is saved) -->
+    <div id="photos-section" class="hidden bg-cream-light rounded-xl border border-cream-dark p-4 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-fynbos-800">Photos for: <span id="saved-bin-name"></span></h2>
+            <span id="photo-count" class="text-sm text-fynbos-500">0 photos</span>
+        </div>
+
+        <!-- Photo Grid -->
+        <div id="photo-grid" class="grid grid-cols-3 gap-2 mb-4">
+            <!-- Photos will be added here dynamically -->
+        </div>
+
+        <!-- Add Photo Button -->
+        <label for="photo-input" class="flex items-center justify-center w-full h-20 border-2 border-dashed border-fynbos-300 rounded-lg cursor-pointer bg-fynbos-50 hover:bg-fynbos-100 active:bg-fynbos-200 transition-colors">
+            <div class="text-center">
+                <svg class="w-8 h-8 mx-auto text-fynbos-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                <span class="text-sm text-fynbos-500">Tap to add photo</span>
+            </div>
+        </label>
+        <input type="file"
+               id="photo-input"
+               accept="image/*"
+               capture="environment"
+               class="hidden">
+
+        <!-- Upload Progress -->
+        <div id="upload-progress" class="hidden mt-3">
+            <div class="flex items-center gap-2 text-fynbos-600">
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Uploading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="space-y-3 mb-6">
+        <button type="button"
+                id="next-bin-btn"
+                onclick="nextBin()"
+                disabled
+                class="w-full bg-protea-600 hover:bg-protea-700 active:bg-protea-800 disabled:bg-fynbos-300 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            Next Bin
+        </button>
+
+        <a href="/browse/location/{{ location.id }}"
+           id="done-btn"
+           onclick="saveCurrent(event)"
+           class="block w-full bg-fynbos-200 hover:bg-fynbos-300 active:bg-fynbos-400 text-fynbos-800 px-4 py-3 rounded-lg transition-colors font-medium text-center">
+            Done - Return to {{ location.name }}
+        </a>
+    </div>
+
+    <!-- Session Summary -->
+    <div class="bg-fynbos-50 rounded-xl border border-fynbos-200 p-4">
+        <h3 class="font-medium text-fynbos-700 mb-3">Added this session: <span id="session-count">0</span> bins</h3>
+        <ul id="session-list" class="space-y-2 text-sm text-fynbos-600">
+            <li class="text-fynbos-400 italic">No bins added yet</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+// State
+let currentBinId = null;
+let currentBinName = null;
+let currentPhotoCount = 0;
+let sessionBins = [];
+const locationId = "{{ location.id }}";
+
+// Save the current bin
+async function saveBin() {
+    const name = document.getElementById('bin_name').value.trim();
+    const description = document.getElementById('bin_description').value.trim();
+
+    if (!name) {
+        alert('Please enter a bin name');
+        return;
+    }
+
+    const saveBtn = document.getElementById('save-bin-btn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    try {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('description', description);
+
+        const response = await fetch(`/browse/location/${locationId}/quick-add/save`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            currentBinId = data.bin_id;
+            currentBinName = data.bin_name;
+            currentPhotoCount = 0;
+
+            // Update UI
+            document.getElementById('saved-bin-name').textContent = currentBinName;
+            document.getElementById('photos-section').classList.remove('hidden');
+            document.getElementById('next-bin-btn').disabled = false;
+
+            // Disable name/description editing
+            document.getElementById('bin_name').disabled = true;
+            document.getElementById('bin_description').disabled = true;
+            saveBtn.textContent = 'Saved';
+            saveBtn.classList.remove('bg-fynbos-600', 'hover:bg-fynbos-700');
+            saveBtn.classList.add('bg-fynbos-400');
+
+            // Add to session list
+            addToSessionList(currentBinName, 0);
+        } else {
+            alert('Error: ' + data.error);
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Bin';
+        }
+    } catch (error) {
+        alert('Error saving bin: ' + error.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Bin';
+    }
+}
+
+// Handle photo selection - auto upload
+document.getElementById('photo-input').addEventListener('change', async function(e) {
+    if (!currentBinId) {
+        alert('Please save the bin first');
+        return;
+    }
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Show progress
+    document.getElementById('upload-progress').classList.remove('hidden');
+
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`/browse/location/${locationId}/quick-add/upload-photo/${currentBinId}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            currentPhotoCount++;
+            updatePhotoCount();
+            addPhotoToGrid(data.image_id, data.file_path);
+            updateSessionListPhotoCount(currentBinName, currentPhotoCount);
+        } else {
+            alert('Error uploading: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error uploading photo: ' + error.message);
+    } finally {
+        document.getElementById('upload-progress').classList.add('hidden');
+        // Clear input so same file can be selected again
+        e.target.value = '';
+    }
+});
+
+// Add photo thumbnail to grid
+function addPhotoToGrid(imageId, filePath) {
+    const grid = document.getElementById('photo-grid');
+
+    const div = document.createElement('div');
+    div.className = 'relative';
+    div.id = `photo-${imageId}`;
+    div.innerHTML = `
+        <img src="/images/${filePath}?thumb=1" class="w-full h-20 object-cover rounded-lg">
+        <button type="button"
+                onclick="deletePhoto('${imageId}')"
+                class="absolute top-1 right-1 bg-protea-500 hover:bg-protea-600 text-white p-1 rounded-full shadow">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    `;
+    grid.appendChild(div);
+}
+
+// Delete a photo
+async function deletePhoto(imageId) {
+    try {
+        const response = await fetch(`/browse/location/${locationId}/quick-add/delete-photo/${imageId}`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById(`photo-${imageId}`).remove();
+            currentPhotoCount--;
+            updatePhotoCount();
+            updateSessionListPhotoCount(currentBinName, currentPhotoCount);
+        }
+    } catch (error) {
+        alert('Error deleting photo: ' + error.message);
+    }
+}
+
+// Update photo count display
+function updatePhotoCount() {
+    const countEl = document.getElementById('photo-count');
+    countEl.textContent = `${currentPhotoCount} photo${currentPhotoCount !== 1 ? 's' : ''}`;
+}
+
+// Add bin to session list
+function addToSessionList(name, photoCount) {
+    sessionBins.push({ name, photoCount });
+    updateSessionDisplay();
+}
+
+// Update photo count in session list
+function updateSessionListPhotoCount(name, photoCount) {
+    const bin = sessionBins.find(b => b.name === name);
+    if (bin) {
+        bin.photoCount = photoCount;
+        updateSessionDisplay();
+    }
+}
+
+// Update session display
+function updateSessionDisplay() {
+    const list = document.getElementById('session-list');
+    const count = document.getElementById('session-count');
+
+    count.textContent = sessionBins.length;
+
+    if (sessionBins.length === 0) {
+        list.innerHTML = '<li class="text-fynbos-400 italic">No bins added yet</li>';
+    } else {
+        list.innerHTML = sessionBins.map(bin =>
+            `<li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-fynbos-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                ${bin.name} <span class="text-fynbos-400">(${bin.photoCount} photo${bin.photoCount !== 1 ? 's' : ''})</span>
+            </li>`
+        ).join('');
+    }
+}
+
+// Move to next bin
+function nextBin() {
+    // Reset form
+    currentBinId = null;
+    currentBinName = null;
+    currentPhotoCount = 0;
+
+    // Clear and enable inputs
+    document.getElementById('bin_name').value = '';
+    document.getElementById('bin_name').disabled = false;
+    document.getElementById('bin_description').value = '';
+    document.getElementById('bin_description').disabled = false;
+
+    // Reset save button
+    const saveBtn = document.getElementById('save-bin-btn');
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Bin';
+    saveBtn.classList.add('bg-fynbos-600', 'hover:bg-fynbos-700');
+    saveBtn.classList.remove('bg-fynbos-400');
+
+    // Hide photos section and clear grid
+    document.getElementById('photos-section').classList.add('hidden');
+    document.getElementById('photo-grid').innerHTML = '';
+    document.getElementById('photo-count').textContent = '0 photos';
+
+    // Disable next button until new bin is saved
+    document.getElementById('next-bin-btn').disabled = true;
+
+    // Focus name input
+    document.getElementById('bin_name').focus();
+}
+
+// Save current bin before navigating away (for Done button)
+function saveCurrent(event) {
+    // If there's unsaved content, save it first
+    const name = document.getElementById('bin_name').value.trim();
+    if (name && !currentBinId) {
+        event.preventDefault();
+        saveBin().then(() => {
+            window.location.href = `/browse/location/${locationId}`;
+        });
+    }
+    // Otherwise, let the link work normally
+}
+</script>
+{% endblock %}
