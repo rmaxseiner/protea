@@ -3,7 +3,6 @@
 import json
 from unittest.mock import patch, MagicMock
 
-import pytest
 
 from protea.tools import vision
 

@@ -8,7 +8,6 @@ from protea.db.models import (
     BinDetail,
     BinImage,
     BinPathPart,
-    BinTreeNode,
     BinWithLocation,
     Item,
     Location,

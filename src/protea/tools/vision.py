@@ -1,6 +1,5 @@
 """Vision extraction tools for protea using Claude API."""
 
-import base64
 import json
 import logging
 import re

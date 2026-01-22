@@ -3,18 +3,16 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
 from protea.config import Settings
 from protea.db.connection import Database
-from protea.db.models import Location, Bin, Item
 from protea.services.image_store import ImageStore
 from protea.tools import locations as locations_tools
 from protea.tools import bins as bins_tools
 from protea.tools import items as items_tools
-from protea.tools import categories as categories_tools
 
 
 @pytest.fixture

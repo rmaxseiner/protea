@@ -63,7 +63,7 @@ def get_location(
 
     if not row:
         return {
-            "error": f"Location not found",
+            "error": "Location not found",
             "error_code": "NOT_FOUND",
         }
 

@@ -8,7 +8,6 @@ from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 
 from protea.config import settings
-from protea.db.connection import Database
 from protea.server import server, db
 
 # Configure logging

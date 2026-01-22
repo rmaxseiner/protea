@@ -1,7 +1,5 @@
 """Tests for item tools."""
 
-import pytest
-
 from protea.db.models import QuantityType
 from protea.tools import items
 

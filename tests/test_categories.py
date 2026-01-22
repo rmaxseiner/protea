@@ -1,7 +1,5 @@
 """Tests for category tools."""
 
-import pytest
-
 from protea.tools import categories
 
 

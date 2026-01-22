@@ -1,6 +1,5 @@
 """Tests for session workflow tools."""
 
-import pytest
 
 from protea.db.models import SessionStatus
 from protea.tools import sessions

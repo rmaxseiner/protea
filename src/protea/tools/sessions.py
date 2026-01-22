@@ -7,7 +7,6 @@ from protea.config import settings
 from protea.db.connection import Database
 from protea.db.models import (
     ActiveSessionInfo,
-    Bin,
     BinImage,
     Item,
     ItemSource,

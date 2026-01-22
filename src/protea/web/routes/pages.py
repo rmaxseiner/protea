@@ -158,7 +158,7 @@ async def add_quantity(
     new_qty = current_qty + quantity
 
     # Update item with new quantity
-    result = items_tools.update_item(
+    items_tools.update_item(
         db=db,
         item_id=item_id,
         quantity_value=new_qty,

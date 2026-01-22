@@ -1,7 +1,5 @@
 """Tests for bin tools."""
 
-import pytest
-
 from protea.tools import bins
 
 
@@ -196,13 +194,13 @@ def test_get_bin_tree(test_db, sample_location):
     """Test getting bin tree structure."""
     # Create hierarchy
     root = bins.create_bin(db=test_db, name="Root Bin", location_id=sample_location.id)
-    child1 = bins.create_bin(
+    bins.create_bin(
         db=test_db,
         name="Child 1",
         location_id=sample_location.id,
         parent_bin_id=root.id,
     )
-    child2 = bins.create_bin(
+    bins.create_bin(
         db=test_db,
         name="Child 2",
         location_id=sample_location.id,

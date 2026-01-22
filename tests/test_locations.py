@@ -1,7 +1,5 @@
 """Tests for location tools."""
 
-import pytest
-
 from protea.tools import locations
 
 

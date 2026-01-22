@@ -1,6 +1,5 @@
 """Tests for search tools."""
 
-import pytest
 
 from protea.tools import items, search
 
