@@ -544,6 +544,100 @@ async def quick_add_location_delete_photo(
     return JSONResponse({"success": True})
 
 
+@router.get("/browse/location/{location_id}/download-images")
+async def download_location_images(
+    request: Request,
+    location_id: str,
+    db: Database = Depends(get_db),
+):
+    """Download all images from a location (all bins) as a zip file."""
+    # Get the location
+    location = locations_tools.get_location(db, location_id=location_id)
+    if isinstance(location, dict) and "error" in location:
+        return RedirectResponse(
+            url=f"/browse/location/{location_id}?error=Location not found",
+            status_code=303
+        )
+
+    # Get all root bins in this location
+    root_bins = bins_tools.get_bins(db, location_id=location_id, root_only=True)
+    if isinstance(root_bins, dict) and "error" in root_bins:
+        root_bins = []
+
+    # Collect all bins to process (recursively)
+    bins_to_process = []
+
+    def add_bin_and_children(bin_id: str, bin_name: str, path: list[str]):
+        current_path = path + [bin_name]
+        bins_to_process.append({
+            "id": bin_id,
+            "name": bin_name,
+            "path": current_path
+        })
+        # Get children
+        rows = db.execute(
+            "SELECT id, name FROM bins WHERE parent_bin_id = ?",
+            (bin_id,)
+        )
+        for row in rows:
+            add_bin_and_children(row["id"], row["name"], current_path)
+
+    # Start with root bins
+    for bin_obj in root_bins:
+        add_bin_and_children(bin_obj.id, bin_obj.name, [location.name])
+
+    # Create zip file in memory
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for bin_info in bins_to_process:
+            # Build sanitized folder path
+            folder_path = "/".join(_sanitize_name(p) for p in bin_info["path"])
+            sanitized_bin_name = _sanitize_name(bin_info["name"])
+
+            # Get images for this bin
+            images = bins_tools.get_bin_images(db, bin_info["id"])
+            if isinstance(images, dict) and "error" in images:
+                images = []
+
+            if not images:
+                # Create empty folder with placeholder
+                zip_file.writestr(f"{folder_path}/.empty", "")
+            else:
+                # Add images with proper naming
+                for idx, image in enumerate(images):
+                    image_path = Path(settings.image_base_path) / image.file_path
+
+                    if not image_path.exists():
+                        continue
+
+                    # Determine extension from file
+                    ext = image_path.suffix or ".jpg"
+
+                    # Build filename
+                    if len(images) == 1:
+                        filename = f"{sanitized_bin_name}{ext}"
+                    else:
+                        filename = f"{sanitized_bin_name}-{idx + 1}{ext}"
+
+                    # Add to zip
+                    zip_file.write(image_path, f"{folder_path}/{filename}")
+
+    # Prepare response
+    zip_buffer.seek(0)
+
+    # Generate filename for the zip
+    root_name = _sanitize_name(location.name)
+
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{root_name}-images.zip"'
+        }
+    )
+
+
 @router.get("/browse/bin/{bin_id}", response_class=HTMLResponse)
 async def browse_bin_page(
     request: Request,

@@ -76,6 +76,16 @@
             <button type="button" onclick="toggleEditForm()" class="px-4 py-2 bg-protea-600 text-white rounded-lg hover:bg-protea-700 transition-colors">
                 Edit Location
             </button>
+            {% if bins|length > 0 %}
+            <a href="/browse/location/{{ location.id }}/download-images"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-fynbos-600 hover:bg-fynbos-700 text-white rounded-lg transition-colors"
+               title="Download all images from all bins in this location as a zip file">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download All
+            </a>
+            {% endif %}
             {% if bins|length == 0 %}
             <form action="/browse/location/{{ location.id }}/delete" method="post" class="inline"
                   onsubmit="return confirm('Delete location \'{{ location.name }}\'? This cannot be undone.')">
