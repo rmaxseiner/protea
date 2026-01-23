@@ -118,29 +118,65 @@ Example: `prot_Xk9mP2vL7nQ4wRbT8yF3hJ6kM1pN5sD9`
 
 ## MCP Client Configuration
 
-### Claude Desktop - SSE Transport (Recommended)
+### Configuration File Locations
 
-Add to your Claude Desktop MCP configuration (`~/.config/claude/claude_desktop_config.json` on Linux or `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+| Platform | Path |
+|----------|------|
+| Linux | `~/.config/Claude/claude_desktop_config.json` |
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+
+### Claude Desktop - Remote SSE via mcp-remote (Recommended)
+
+Claude Desktop does not natively support SSE transport, so you must use `mcp-remote` as a bridge. This uses npx to run the mcp-remote package which translates between stdio (what Claude Desktop uses) and SSE (what the remote server uses).
 
 ```json
 {
   "mcpServers": {
     "protea": {
-      "transport": {
-        "type": "sse",
-        "url": "http://localhost:8081/sse",
-        "headers": {
-          "Authorization": "Bearer prot_YOUR_API_KEY_HERE"
-        }
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://protea.example.com/sse",
+        "--header",
+        "Authorization:${AUTH_HEADER}"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer prot_YOUR_API_KEY_HERE"
       }
     }
   }
 }
 ```
 
-### Claude Desktop - Stdio Transport
+**Important notes:**
+- The `Authorization:${AUTH_HEADER}` format (no space after colon) is required due to a bug in Claude Desktop where spaces in args are not properly escaped
+- The `Bearer ` prefix (with space) must be included in the `AUTH_HEADER` environment variable value
+- Replace `https://protea.example.com/sse` with your actual Protea SSE endpoint URL
 
-For stdio transport, pass the API key as an environment variable:
+### Claude Desktop - Remote SSE without Authentication
+
+If authentication is disabled (`PROTEA_AUTH_REQUIRED=false`), you can use a simpler configuration:
+
+```json
+{
+  "mcpServers": {
+    "protea": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://protea.example.com/sse"
+      ]
+    }
+  }
+}
+```
+
+### Claude Desktop - Local Stdio Transport
+
+For local installations using stdio transport, pass the API key as an environment variable:
 
 ```json
 {
@@ -168,26 +204,6 @@ If running from source with uv:
       "cwd": "/path/to/protea",
       "env": {
         "PROTEA_API_KEY": "prot_YOUR_API_KEY_HERE"
-      }
-    }
-  }
-}
-```
-
-### Remote Server Configuration
-
-For a remote Protea server:
-
-```json
-{
-  "mcpServers": {
-    "protea": {
-      "transport": {
-        "type": "sse",
-        "url": "https://protea.example.com/sse",
-        "headers": {
-          "Authorization": "Bearer prot_YOUR_API_KEY_HERE"
-        }
       }
     }
   }
@@ -448,17 +464,13 @@ networks:
 
 1. Verify the key is correct (no extra spaces)
 2. Check if the key has been revoked in Settings
-3. Ensure the `Bearer ` prefix is included for SSE
+3. Ensure the `Bearer ` prefix is included in the `AUTH_HEADER` env var
 
 ### "Missing Authorization header" Error
 
-Ensure your Claude Desktop config includes the Authorization header:
-
-```json
-"headers": {
-  "Authorization": "Bearer prot_YOUR_KEY"
-}
-```
+For mcp-remote configurations, ensure:
+1. The `--header` arg is included: `"--header", "Authorization:${AUTH_HEADER}"`
+2. The `AUTH_HEADER` env var starts with `Bearer ` (with space): `"Bearer prot_YOUR_KEY"`
 
 ### "Authentication required but PROTEA_API_KEY not set" (Stdio)
 
@@ -469,6 +481,39 @@ For stdio transport, set the environment variable:
   "PROTEA_API_KEY": "prot_YOUR_KEY"
 }
 ```
+
+### DNS Resolution Errors with mcp-remote
+
+If you see `getaddrinfo EAI_AGAIN` errors:
+1. This is usually a transient DNS failure - restart Claude Desktop
+2. Verify DNS works from terminal: `nslookup your-protea-host.example.com`
+3. Verify the endpoint is reachable: `curl https://your-protea-host.example.com/health`
+
+### HTTP 502 Bad Gateway
+
+This indicates the reverse proxy cannot reach the Protea container:
+1. Check if the container is running: `docker ps | grep protea`
+2. Check container logs: `docker logs protea-mcp-sse --tail 50`
+3. Verify health endpoint: `curl https://your-protea-host.example.com/health`
+
+### Debugging mcp-remote Connections
+
+Add the `--debug` flag to get detailed logs:
+
+```json
+{
+  "args": [
+    "-y",
+    "mcp-remote@latest",
+    "https://protea.example.com/sse",
+    "--header",
+    "Authorization:${AUTH_HEADER}",
+    "--debug"
+  ]
+}
+```
+
+Debug logs are written to `~/.mcp-auth/{server_hash}_debug.log`
 
 ### Forgot Admin Password
 
