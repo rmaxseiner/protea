@@ -11,19 +11,25 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Stre
 
 from protea.config import settings
 from protea.db.connection import Database
+from protea.db.models import User
 from protea.services.image_store import ImageStore
 from protea.tools import bins as bins_tools
 from protea.tools import items as items_tools
 from protea.tools import locations as locations_tools
 from protea.tools import search as search_tools
 from protea.web.app import templates
-from protea.web.dependencies import get_db, get_image_store
+from protea.web.dependencies import get_db, get_image_store, require_auth
 
 router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-async def search_page(request: Request, q: str = "", db: Database = Depends(get_db)):
+async def search_page(
+    request: Request,
+    q: str = "",
+    db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
+):
     """Render search page with optional results."""
     results = []
     if q.strip():
@@ -36,13 +42,17 @@ async def search_page(request: Request, q: str = "", db: Database = Depends(get_
             "query": q,
             "results": results,
             "active_nav": "search",
+            "user": user,
         },
     )
 
 
 @router.get("/search", response_class=HTMLResponse)
 async def search_results_page(
-    request: Request, q: str = "", db: Database = Depends(get_db)
+    request: Request,
+    q: str = "",
+    db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Search results page (full page reload version)."""
     results = []
@@ -56,13 +66,17 @@ async def search_results_page(
             "query": q,
             "results": results,
             "active_nav": "search",
+            "user": user,
         },
     )
 
 
 @router.get("/item/{item_id}", response_class=HTMLResponse)
 async def item_detail_page(
-    request: Request, item_id: str, db: Database = Depends(get_db)
+    request: Request,
+    item_id: str,
+    db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Render item detail page."""
     result = items_tools.get_item(db, item_id)
@@ -76,6 +90,7 @@ async def item_detail_page(
                 "error": result["error"],
                 "item": None,
                 "active_nav": "search",
+                "user": user,
             },
             status_code=404,
         )
@@ -106,6 +121,7 @@ async def item_detail_page(
             "history": history,
             "all_bins": all_bins,
             "active_nav": "search",
+            "user": user,
         },
     )
 
@@ -117,6 +133,7 @@ async def move_item(
     to_bin_id: str = Form(...),
     notes: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Handle move item form submission."""
     result = items_tools.move_item(
@@ -143,6 +160,7 @@ async def add_quantity(
     quantity: int = Form(default=1),
     notes: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Handle add quantity form submission."""
     # Get current item to find current quantity
@@ -185,6 +203,7 @@ async def use_item(
     quantity: int = Form(default=1),
     notes: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Handle use item form submission."""
     result = items_tools.use_item(
@@ -215,6 +234,7 @@ async def edit_item(
     quantity_label: str = Form(default=""),
     notes: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Handle item edit form submission."""
     result = items_tools.update_item(
@@ -240,7 +260,11 @@ async def edit_item(
 
 
 @router.get("/browse", response_class=HTMLResponse)
-async def browse_page(request: Request, db: Database = Depends(get_db)):
+async def browse_page(
+    request: Request,
+    db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
+):
     """Render browse page with location/bin tree."""
     locations = locations_tools.get_locations(db)
 
@@ -294,6 +318,7 @@ async def browse_page(request: Request, db: Database = Depends(get_db)):
         context={
             "locations": location_data,
             "active_nav": "browse",
+            "user": user,
         },
     )
 
@@ -304,6 +329,7 @@ async def browse_location_page(
     location_id: str,
     error: str = None,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Render location detail page."""
     result = locations_tools.get_location(db, location_id=location_id)
@@ -316,6 +342,7 @@ async def browse_location_page(
                 "error": result["error"],
                 "location": None,
                 "active_nav": "browse",
+                "user": user,
             },
             status_code=404,
         )
@@ -349,6 +376,7 @@ async def browse_location_page(
             "bins": bins_with_counts,
             "active_nav": "browse",
             "error_message": error,
+            "user": user,
         },
     )
 
@@ -360,6 +388,7 @@ async def edit_location(
     name: str = Form(...),
     description: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Handle location edit form submission."""
     result = locations_tools.update_location(
@@ -383,6 +412,7 @@ async def delete_location(
     request: Request,
     location_id: str,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Handle location delete."""
     result = locations_tools.delete_location(db=db, location_id=location_id)
@@ -404,6 +434,7 @@ async def create_location_bin(
     name: str = Form(...),
     description: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Create a new bin in this location."""
     result = bins_tools.create_bin(
@@ -434,6 +465,7 @@ async def quick_add_location_bins_page(
     name: str = "",
     description: str = "",
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Render quick add bins to location page."""
     location = locations_tools.get_location(db, location_id=location_id)
@@ -449,6 +481,7 @@ async def quick_add_location_bins_page(
             "prefill_name": name,
             "prefill_description": description,
             "active_nav": "browse",
+            "user": user,
         },
     )
 
@@ -460,6 +493,7 @@ async def quick_add_location_save_bin(
     name: str = Form(...),
     description: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """AJAX: Create a new bin in the location and return its ID."""
     # Verify location exists
@@ -498,6 +532,7 @@ async def quick_add_location_upload_photo(
     image: UploadFile,
     db: Database = Depends(get_db),
     image_store: ImageStore = Depends(get_image_store),
+    user: User = Depends(require_auth),
 ):
     """AJAX: Upload a photo to a bin created via quick-add."""
     # Read and encode the image
@@ -538,6 +573,7 @@ async def quick_add_location_delete_photo(
     image_id: str,
     db: Database = Depends(get_db),
     image_store: ImageStore = Depends(get_image_store),
+    user: User = Depends(require_auth),
 ):
     """AJAX: Delete a photo from a bin in quick-add mode."""
     bins_tools.remove_bin_image(db=db, image_store=image_store, image_id=image_id)
@@ -549,6 +585,7 @@ async def download_location_images(
     request: Request,
     location_id: str,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Download all images from a location (all bins) as a zip file."""
     # Get the location
@@ -644,6 +681,7 @@ async def browse_bin_page(
     bin_id: str,
     error: str = None,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Render bin detail page in browse context."""
     result = bins_tools.get_bin(db, bin_id=bin_id, include_items=True, include_images=True)
@@ -656,6 +694,7 @@ async def browse_bin_page(
                 "error": result["error"],
                 "bin": None,
                 "active_nav": "browse",
+                "user": user,
             },
             status_code=404,
         )
@@ -667,6 +706,7 @@ async def browse_bin_page(
             "bin": result,
             "active_nav": "browse",
             "upload_error": error,
+            "user": user,
         },
     )
 
@@ -682,6 +722,7 @@ async def add_item_to_bin(
     quantity_label: str = Form(default=""),
     notes: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Add a new item to a bin from the web UI."""
     result = items_tools.add_item(
@@ -712,6 +753,7 @@ async def create_child_bin(
     name: str = Form(...),
     description: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Create a child bin inside the current bin."""
     # Get parent bin to find location_id
@@ -745,6 +787,7 @@ async def delete_child_bin(
     bin_id: str,
     child_id: str,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Delete a child bin."""
     result = bins_tools.delete_bin(db=db, bin_id=child_id)
@@ -768,6 +811,7 @@ async def upload_bin_image(
     is_primary: bool = Form(default=False),
     db: Database = Depends(get_db),
     image_store: ImageStore = Depends(get_image_store),
+    user: User = Depends(require_auth),
 ):
     """Upload an image to a bin."""
     # Read and encode the image
@@ -802,6 +846,7 @@ async def delete_bin_image(
     image_id: str,
     db: Database = Depends(get_db),
     image_store: ImageStore = Depends(get_image_store),
+    user: User = Depends(require_auth),
 ):
     """Delete an image from a bin."""
     bins_tools.remove_bin_image(db=db, image_store=image_store, image_id=image_id)
@@ -814,6 +859,7 @@ async def set_primary_bin_image(
     bin_id: str,
     image_id: str,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Set an image as the primary image for a bin."""
     bins_tools.set_primary_bin_image(db=db, bin_id=bin_id, image_id=image_id)
@@ -868,6 +914,7 @@ async def download_bin_images(
     request: Request,
     bin_id: str,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Download all images from a bin and its children as a zip file."""
     # Get the bin
@@ -965,6 +1012,7 @@ async def quick_add_page(
     name: str = "",
     description: str = "",
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Render quick add sub-bins page."""
     parent_bin = bins_tools.get_bin(db, bin_id=bin_id)
@@ -980,6 +1028,7 @@ async def quick_add_page(
             "prefill_name": name,
             "prefill_description": description,
             "active_nav": "browse",
+            "user": user,
         },
     )
 
@@ -991,6 +1040,7 @@ async def quick_add_save_bin(
     name: str = Form(...),
     description: str = Form(default=""),
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """AJAX: Create a new sub-bin and return its ID."""
     # Get parent bin to find location_id
@@ -1030,6 +1080,7 @@ async def quick_add_upload_photo(
     image: UploadFile,
     db: Database = Depends(get_db),
     image_store: ImageStore = Depends(get_image_store),
+    user: User = Depends(require_auth),
 ):
     """AJAX: Upload a photo to a bin created via quick-add."""
     # Read and encode the image
@@ -1070,6 +1121,7 @@ async def quick_add_delete_photo(
     image_id: str,
     db: Database = Depends(get_db),
     image_store: ImageStore = Depends(get_image_store),
+    user: User = Depends(require_auth),
 ):
     """AJAX: Delete a photo from a bin in quick-add mode."""
     bins_tools.remove_bin_image(db=db, image_store=image_store, image_id=image_id)
@@ -1081,6 +1133,7 @@ async def history_page(
     request: Request,
     limit: int = 50,
     db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
 ):
     """Render activity history page."""
     # Get recent activity with item and location details
@@ -1141,5 +1194,6 @@ async def history_page(
         context={
             "history_dates": history_dates,
             "active_nav": "history",
+            "user": user,
         },
     )

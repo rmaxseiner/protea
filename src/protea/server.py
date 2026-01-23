@@ -3,13 +3,15 @@
 import asyncio
 import json
 import logging
+import os
+import sys
 from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-from protea.config import settings
+from protea.config import auth_settings, settings
 from protea.db.connection import Database
 from protea.services.image_store import ImageStore
 from protea.tools import (
@@ -22,6 +24,7 @@ from protea.tools import (
     sessions,
     vision,
 )
+from protea.tools import auth as auth_tools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -822,12 +825,85 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
         return {"error": f"Unknown tool: {name}", "error_code": "NOT_FOUND"}
 
 
+def _bootstrap_admin_user() -> None:
+    """Create admin user if no users exist."""
+    user_count = auth_tools.get_user_count(db)
+    if user_count > 0:
+        return
+
+    # Generate or use provided password
+    password = auth_settings.admin_password
+    if not password:
+        password = auth_tools.generate_random_password()
+
+    result = auth_tools.create_user(
+        db,
+        username="admin",
+        password=password,
+        is_admin=True,
+        must_change_password=True,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        logger.error(f"Failed to create admin user: {result['error']}")
+        return
+
+    # Use print() to ensure this critical message is always visible in logs
+    print("=" * 50, file=sys.stderr, flush=True)
+    print("FIRST-RUN: Admin user created", file=sys.stderr, flush=True)
+    print(f"Username: admin", file=sys.stderr, flush=True)
+    print(f"Password: {password}", file=sys.stderr, flush=True)
+    print("=" * 50, file=sys.stderr, flush=True)
+
+
+def _validate_stdio_auth() -> bool:
+    """Validate authentication for stdio transport.
+
+    Checks PROTEA_API_KEY environment variable against:
+    1. Legacy single-key mode (auth_settings.api_key)
+    2. Database API keys
+
+    Returns:
+        True if authenticated, False otherwise
+    """
+    if not auth_settings.auth_required:
+        return True
+
+    api_key = os.environ.get("PROTEA_API_KEY")
+    if not api_key:
+        logger.error("Authentication required but PROTEA_API_KEY not set")
+        return False
+
+    # Check legacy single-key mode
+    if auth_settings.api_key and api_key == auth_settings.api_key:
+        logger.debug("Authenticated via legacy PROTEA_API_KEY config")
+        return True
+
+    # Validate against database
+    user = auth_tools.validate_api_key(db, api_key)
+    if user:
+        logger.debug(f"Authenticated as user: {user.username}")
+        return True
+
+    logger.error("Invalid API key provided")
+    return False
+
+
 def main():
     """Run the MCP server."""
     # Run migrations on startup
     logger.info("Running database migrations...")
     db.run_migrations()
     logger.info("Migrations complete.")
+
+    # Bootstrap admin user if needed
+    _bootstrap_admin_user()
+
+    # Validate authentication
+    if not _validate_stdio_auth():
+        logger.error("Authentication failed. Set PROTEA_API_KEY environment variable.")
+        logger.error("Generate an API key via the web UI at /settings")
+        sys.exit(1)
 
     logger.info("Starting Inventory MCP Server...")
 

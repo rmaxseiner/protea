@@ -1,7 +1,7 @@
 """Configuration settings for Inventory MCP Server."""
 
 from pathlib import Path
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -45,7 +45,26 @@ class Settings(BaseSettings):
     vector_search_weight: float = 0.5  # Weight for vector similarity in hybrid search
     fts_search_weight: float = 0.5  # Weight for FTS score in hybrid search
 
-    model_config = {"env_prefix": "INVENTORY_"}
+    model_config = SettingsConfigDict(env_prefix="INVENTORY_")
+
+
+class AuthSettings(BaseSettings):
+    """Authentication settings loaded from PROTEA_ prefixed environment variables."""
+
+    # Admin password for first-run bootstrap (optional - generates random if not set)
+    admin_password: str | None = None  # PROTEA_ADMIN_PASSWORD
+
+    # Legacy single API key for backward compatibility
+    api_key: str | None = None  # PROTEA_API_KEY
+
+    # Session duration in hours
+    session_hours: int = 24  # PROTEA_SESSION_HOURS
+
+    # Whether authentication is required (False for dev/testing)
+    auth_required: bool = True  # PROTEA_AUTH_REQUIRED
+
+    model_config = SettingsConfigDict(env_prefix="PROTEA_")
 
 
 settings = Settings()
+auth_settings = AuthSettings()

@@ -141,3 +141,19 @@ class Database:
         with self.connection() as conn:
             cursor = conn.executemany(query, params_list)
             return cursor.rowcount
+
+    def execute_update(
+        self, query: str, params: tuple = ()
+    ) -> int:
+        """Execute an UPDATE or DELETE query and return rows affected.
+
+        Args:
+            query: SQL UPDATE or DELETE query
+            params: Query parameters
+
+        Returns:
+            Number of rows affected
+        """
+        with self.connection() as conn:
+            cursor = conn.execute(query, params)
+            return cursor.rowcount

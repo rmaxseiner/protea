@@ -1,28 +1,47 @@
-services:
-  protea-web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: protea:latest
-    container_name: protea-web
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    volumes:
-      # Bind mounts for persistent data
-      - ./data/db:/data/db
-      - ./data/images:/data/images
-    environment:
-      - INVENTORY_DATABASE_PATH=/data/db/inventory.db
-      - INVENTORY_IMAGE_BASE_PATH=/data/images
-      - INVENTORY_WEB_HOST=0.0.0.0
-      - INVENTORY_WEB_PORT=8080
-      # Uncomment and set for vision extraction feature
-      # - INVENTORY_CLAUDE_API_KEY=sk-ant-...
-    command: ["web"]
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+  services:                                                                                                                                                                                                                                             
+    protea-web:                                                                                                                                                                                                                                         
+      build:                                                                                                                                                                                                                                            
+        context: .                                                                                                                                                                                                                                      
+        dockerfile: Dockerfile                                                                                                                                                                                                                          
+      image: protea:latest                                                                                                                                                                                                                              
+      container_name: protea-web                                                                                                                                                                                                                        
+      restart: unless-stopped                                                                                                                                                                                                                           
+      ports:                                                                                                                                                                                                                                            
+        - "8080:8080"                                                                                                                                                                                                                                   
+      volumes:                                                                                                                                                                                                                                          
+        - ./data/db:/data/db                                                                                                                                                                                                                            
+        - ./data/images:/data/images                                                                                                                                                                                                                    
+      environment:
+        - PROTEA_AUTH_REQUIRED=false
+        - INVENTORY_DATABASE_PATH=/data/db/inventory.db                                                                                                                                                                                                 
+        - INVENTORY_IMAGE_BASE_PATH=/data/images                                                                                                                                                                                                        
+        - INVENTORY_WEB_HOST=0.0.0.0                                                                                                                                                                                                                    
+        - INVENTORY_WEB_PORT=8080                                                                                                                                                                                                                       
+        - PROTEA_ADMIN_PASSWORD=TestPass123!                                                                                                                                                                                                            
+      command: ["web"]                                                                                                                                                                                                                                  
+      healthcheck:                                                                                                                                                                                                                                      
+        test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/')"]                                                                                                                                        
+        interval: 30s                                                                                                                                                                                                                                   
+        timeout: 10s                                                                                                                                                                                                                                    
+        retries: 3                                                                                                                                                                                                                                      
+        start_period: 10s                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                        
+    protea-sse:                                                                                                                                                                                                                                         
+      image: protea:latest                                                                                                                                                                                                                              
+      container_name: protea-sse                                                                                                                                                                                                                        
+      restart: unless-stopped                                                                                                                                                                                                                           
+      ports:                                                                                                                                                                                                                                            
+        - "8081:8081"                                                                                                                                                                                                                                   
+      volumes:                                                                                                                                                                                                                                          
+        - ./data/db:/data/db                                                                                                                                                                                                                            
+        - ./data/images:/data/images                                                                                                                                                                                                                    
+      environment:
+        - PROTEA_AUTH_REQUIRED=false
+        - INVENTORY_DATABASE_PATH=/data/db/inventory.db                                                                                                                                                                                                 
+        - INVENTORY_IMAGE_BASE_PATH=/data/images                                                                                                                                                                                                        
+        - INVENTORY_MCP_SSE_HOST=0.0.0.0                                                                                                                                                                                                                
+        - INVENTORY_MCP_SSE_PORT=8081                                                                                                                                                                                                                   
+      command: ["mcp-sse"]                                                                                                                                                                                                                              
+      depends_on:                                                                                                                                                                                                                                       
+        protea-web:                                                                                                                                                                                                                                     
+          condition: service_healthy    

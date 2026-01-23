@@ -282,3 +282,74 @@ class ActiveSessionInfo(BaseModel):
     image_count: int
     is_stale: bool
     stale_duration_minutes: Optional[int] = None
+
+
+# --- Authentication Models ---
+
+
+class User(BaseModel):
+    """A user account."""
+
+    id: str = Field(default_factory=generate_id)
+    username: str
+    email: Optional[str] = None
+    password_hash: str
+    is_admin: bool = False
+    must_change_password: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class UserPublic(BaseModel):
+    """User data safe for API responses (no password hash)."""
+
+    id: str
+    username: str
+    email: Optional[str] = None
+    is_admin: bool = False
+    must_change_password: bool = False
+    created_at: datetime
+    updated_at: datetime
+
+
+class ApiKey(BaseModel):
+    """An API key for MCP authentication."""
+
+    id: str = Field(default_factory=generate_id)
+    user_id: str
+    key_hash: str
+    name: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_used_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    is_active: bool = True
+
+
+class ApiKeyPublic(BaseModel):
+    """API key data safe for display (no hash)."""
+
+    id: str
+    user_id: str
+    name: str
+    created_at: datetime
+    last_used_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    is_active: bool = True
+
+
+class ApiKeyWithPlaintext(ApiKeyPublic):
+    """API key with plaintext key (only returned on creation)."""
+
+    plaintext_key: str
+
+
+class AuthSession(BaseModel):
+    """A web UI authentication session."""
+
+    id: str = Field(default_factory=generate_id)
+    user_id: str
+    token_hash: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: datetime
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Protea Inventory</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        protea: {
+                            50:  '#fdf5f5',
+                            100: '#fae8e8',
+                            200: '#f5d0d0',
+                            300: '#ebb5b5',
+                            400: '#dc8f8f',
+                            500: '#c96b6b',
+                            600: '#a94f54',
+                            700: '#8d3f43',
+                            800: '#753538',
+                            900: '#632f31',
+                            950: '#351617',
+                        },
+                        fynbos: {
+                            50:  '#f4f7f4',
+                            100: '#e4ebe4',
+                            200: '#c9d7c9',
+                            300: '#a3b9a3',
+                            400: '#7a967a',
+                            500: '#5c7a5c',
+                            600: '#486248',
+                            700: '#3b4f3b',
+                            800: '#324032',
+                            900: '#2a352a',
+                            950: '#151c15',
+                        },
+                        cream: {
+                            light: '#fefcf8',
+                            DEFAULT: '#f7f2e8',
+                            dark: '#e8dfc8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="/static/theme.css">
+</head>
+<body class="bg-cream min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md px-4">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8">
+            <img src="/static/favicon.svg" alt="" class="w-16 h-16 mx-auto mb-4">
+            <h1 class="text-2xl font-bold text-fynbos-800">Protea Inventory</h1>
+            <p class="text-fynbos-600 mt-2">Create your account</p>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            {% if error %}
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/auth/signup" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-fynbos-700 mb-1">
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" required autofocus
+                           class="w-full px-4 py-2 border border-fynbos-300 rounded-lg focus:ring-2 focus:ring-protea-500 focus:border-protea-500 outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-fynbos-700 mb-1">
+                        Email <span class="text-fynbos-400">(optional)</span>
+                    </label>
+                    <input type="email" id="email" name="email"
+                           class="w-full px-4 py-2 border border-fynbos-300 rounded-lg focus:ring-2 focus:ring-protea-500 focus:border-protea-500 outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-fynbos-700 mb-1">
+                        Password
+                    </label>
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-4 py-2 border border-fynbos-300 rounded-lg focus:ring-2 focus:ring-protea-500 focus:border-protea-500 outline-none transition-colors">
+                    <p class="mt-1 text-xs text-fynbos-500">
+                        Min 8 characters, 1 uppercase, 1 number, 1 special character (!@#$%^&*_+-=)
+                    </p>
+                </div>
+
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-fynbos-700 mb-1">
+                        Confirm Password
+                    </label>
+                    <input type="password" id="confirm_password" name="confirm_password" required
+                           class="w-full px-4 py-2 border border-fynbos-300 rounded-lg focus:ring-2 focus:ring-protea-500 focus:border-protea-500 outline-none transition-colors">
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-protea-600 hover:bg-protea-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    Create Account
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-fynbos-600">
+                    Already have an account?
+                    <a href="/auth/login" class="text-protea-600 hover:text-protea-700 font-medium">
+                        Sign in
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -4,6 +4,10 @@ from .connection import Database
 from .models import (
     ActivityAction,
     ActivityLog,
+    ApiKey,
+    ApiKeyPublic,
+    ApiKeyWithPlaintext,
+    AuthSession,
     Bin,
     BinDetail,
     BinImage,
@@ -22,6 +26,8 @@ from .models import (
     SessionDetail,
     SessionImage,
     SessionStatus,
+    User,
+    UserPublic,
 )
 
 __all__ = [
@@ -46,4 +52,10 @@ __all__ = [
     "PendingItem",
     "PendingItemSource",
     "SearchResult",
+    "User",
+    "UserPublic",
+    "ApiKey",
+    "ApiKeyPublic",
+    "ApiKeyWithPlaintext",
+    "AuthSession",
 ]
