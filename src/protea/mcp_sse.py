@@ -61,6 +61,11 @@ def create_sse_app() -> Starlette:
         if auth_settings.auth_required:
             # Get Authorization header
             auth_header = request.headers.get("authorization", "")
+            logger.info(
+                f"Auth header received: '{auth_header[:20]}...' (truncated)"
+                if auth_header
+                else "Auth header received: (empty)"
+            )
 
             if not auth_header.startswith("Bearer "):
                 return JSONResponse(
@@ -84,12 +89,8 @@ def create_sse_app() -> Starlette:
                 logger.debug(f"Authenticated as user: {user.username}")
 
         try:
-            async with sse.connect_sse(
-                request.scope, request.receive, request._send
-            ) as streams:
-                await server.run(
-                    streams[0], streams[1], server.create_initialization_options()
-                )
+            async with sse.connect_sse(request.scope, request.receive, request._send) as streams:
+                await server.run(streams[0], streams[1], server.create_initialization_options())
         except Exception as e:
             logger.error(f"SSE connection error: {e}", exc_info=True)
             return JSONResponse(
