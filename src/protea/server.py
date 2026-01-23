@@ -851,7 +851,7 @@ def _bootstrap_admin_user() -> None:
     # Use print() to ensure this critical message is always visible in logs
     print("=" * 50, file=sys.stderr, flush=True)
     print("FIRST-RUN: Admin user created", file=sys.stderr, flush=True)
-    print(f"Username: admin", file=sys.stderr, flush=True)
+    print("Username: admin", file=sys.stderr, flush=True)
     print(f"Password: {password}", file=sys.stderr, flush=True)
     print("=" * 50, file=sys.stderr, flush=True)
 

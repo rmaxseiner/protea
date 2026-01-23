@@ -3,7 +3,6 @@
 from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request
-from fastapi.responses import RedirectResponse
 
 from protea.config import auth_settings
 from protea.db.connection import Database
