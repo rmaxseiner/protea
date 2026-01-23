@@ -61,11 +61,6 @@ def create_sse_app() -> Starlette:
         if auth_settings.auth_required:
             # Get Authorization header
             auth_header = request.headers.get("authorization", "")
-            logger.info(
-                f"Auth header received: '{auth_header[:20]}...' (truncated)"
-                if auth_header
-                else "Auth header received: (empty)"
-            )
 
             if not auth_header.startswith("Bearer "):
                 return JSONResponse(
