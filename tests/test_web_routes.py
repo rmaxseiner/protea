@@ -26,6 +26,17 @@ def web_settings():
         )
 
 
+@pytest.fixture(autouse=True)
+def disable_auth():
+    """Disable authentication for web route tests."""
+    from protea.config import auth_settings
+
+    original_value = auth_settings.auth_required
+    auth_settings.auth_required = False
+    yield
+    auth_settings.auth_required = original_value
+
+
 @pytest.fixture
 def web_app(web_settings):
     """Create a test FastAPI app with test database."""
