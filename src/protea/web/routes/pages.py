@@ -106,12 +106,14 @@ async def item_detail_page(
     for loc in locations:
         loc_bins = bins_tools.get_bins(db, location_id=loc.id)
         for b in loc_bins:
-            all_bins.append({
-                "id": b.id,
-                "name": b.name,
-                "location_name": loc.name,
-                "is_current": b.id == result.bin_id,
-            })
+            all_bins.append(
+                {
+                    "id": b.id,
+                    "name": b.name,
+                    "location_name": loc.name,
+                    "is_current": b.id == result.bin_id,
+                }
+            )
 
     return templates.TemplateResponse(
         request=request,
@@ -185,6 +187,7 @@ async def add_quantity(
     # Log the addition manually since update_item logs "updated" not "added"
     from protea.db.models import ActivityAction
     from protea.tools.items import _log_activity
+
     _log_activity(
         db=db,
         item_id=item_id,
@@ -306,11 +309,13 @@ async def browse_page(
             if flat_bins:
                 bins_tree = bins_to_tree(flat_bins)
 
-        location_data.append({
-            "location": loc,
-            "bins_tree": bins_tree,
-            "bin_count": count_bins(bins_tree),
-        })
+        location_data.append(
+            {
+                "location": loc,
+                "bins_tree": bins_tree,
+                "bin_count": count_bins(bins_tree),
+            }
+        )
 
     return templates.TemplateResponse(
         request=request,
@@ -321,6 +326,29 @@ async def browse_page(
             "user": user,
         },
     )
+
+
+@router.post("/browse/create-location")
+async def create_location(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(default=""),
+    db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
+):
+    """Create a new location from the browse page."""
+    result = locations_tools.create_location(
+        db=db,
+        name=name,
+        description=description if description else None,
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        # Redirect back to browse with error (could use flash messages in future)
+        return RedirectResponse(url="/browse", status_code=303)
+
+    # Redirect to the new location's page
+    return RedirectResponse(url=f"/browse/location/{result.id}", status_code=303)
 
 
 @router.get("/browse/location/{location_id}", response_class=HTMLResponse)
@@ -353,20 +381,22 @@ async def browse_location_page(
     # Count items in each bin
     bins_with_counts = []
     for b in bins:
-        item_count = db.execute_one(
-            "SELECT COUNT(*) as cnt FROM items WHERE bin_id = ?", (b.id,)
-        )["cnt"]
+        item_count = db.execute_one("SELECT COUNT(*) as cnt FROM items WHERE bin_id = ?", (b.id,))[
+            "cnt"
+        ]
         # Count child bins
         child_count = db.execute_one(
             "SELECT COUNT(*) as cnt FROM bins WHERE parent_bin_id = ?", (b.id,)
         )["cnt"]
-        bins_with_counts.append({
-            "id": b.id,
-            "name": b.name,
-            "description": b.description,
-            "item_count": item_count,
-            "child_count": child_count,
-        })
+        bins_with_counts.append(
+            {
+                "id": b.id,
+                "name": b.name,
+                "description": b.description,
+                "item_count": item_count,
+                "child_count": child_count,
+            }
+        )
 
     return templates.TemplateResponse(
         request=request,
@@ -517,11 +547,13 @@ async def quick_add_location_save_bin(
             status_code=400,
         )
 
-    return JSONResponse({
-        "success": True,
-        "bin_id": result.id,
-        "bin_name": result.name,
-    })
+    return JSONResponse(
+        {
+            "success": True,
+            "bin_id": result.id,
+            "bin_name": result.name,
+        }
+    )
 
 
 @router.post("/browse/location/{location_id}/quick-add/upload-photo/{bin_id}")
@@ -559,11 +591,13 @@ async def quick_add_location_upload_photo(
             status_code=400,
         )
 
-    return JSONResponse({
-        "success": True,
-        "image_id": result.id,
-        "file_path": result.file_path,
-    })
+    return JSONResponse(
+        {
+            "success": True,
+            "image_id": result.id,
+            "file_path": result.file_path,
+        }
+    )
 
 
 @router.post("/browse/location/{location_id}/quick-add/delete-photo/{image_id}")
@@ -592,8 +626,7 @@ async def download_location_images(
     location = locations_tools.get_location(db, location_id=location_id)
     if isinstance(location, dict) and "error" in location:
         return RedirectResponse(
-            url=f"/browse/location/{location_id}?error=Location not found",
-            status_code=303
+            url=f"/browse/location/{location_id}?error=Location not found", status_code=303
         )
 
     # Get all root bins in this location
@@ -606,16 +639,9 @@ async def download_location_images(
 
     def add_bin_and_children(bin_id: str, bin_name: str, path: list[str]):
         current_path = path + [bin_name]
-        bins_to_process.append({
-            "id": bin_id,
-            "name": bin_name,
-            "path": current_path
-        })
+        bins_to_process.append({"id": bin_id, "name": bin_name, "path": current_path})
         # Get children
-        rows = db.execute(
-            "SELECT id, name FROM bins WHERE parent_bin_id = ?",
-            (bin_id,)
-        )
+        rows = db.execute("SELECT id, name FROM bins WHERE parent_bin_id = ?", (bin_id,))
         for row in rows:
             add_bin_and_children(row["id"], row["name"], current_path)
 
@@ -626,7 +652,7 @@ async def download_location_images(
     # Create zip file in memory
     zip_buffer = io.BytesIO()
 
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for bin_info in bins_to_process:
             # Build sanitized folder path
             folder_path = "/".join(_sanitize_name(p) for p in bin_info["path"])
@@ -669,9 +695,7 @@ async def download_location_images(
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
-        headers={
-            "Content-Disposition": f'attachment; filename="{root_name}-images.zip"'
-        }
+        headers={"Content-Disposition": f'attachment; filename="{root_name}-images.zip"'},
     )
 
 
@@ -871,7 +895,7 @@ def _sanitize_name(name: str) -> str:
     # Replace spaces with dashes
     name = name.replace(" ", "-")
     # Remove characters that are problematic in filenames
-    name = re.sub(r'[<>:"/\\|?*]', '', name)
+    name = re.sub(r'[<>:"/\\|?*]', "", name)
     return name
 
 
@@ -882,8 +906,7 @@ def _get_bin_path(db: Database, bin_id: str) -> list[str]:
 
     while current_id:
         bin_row = db.execute_one(
-            "SELECT id, name, parent_bin_id, location_id FROM bins WHERE id = ?",
-            (current_id,)
+            "SELECT id, name, parent_bin_id, location_id FROM bins WHERE id = ?", (current_id,)
         )
         if not bin_row:
             break
@@ -897,10 +920,7 @@ def _get_all_child_bins(db: Database, bin_id: str) -> list[dict]:
     """Recursively get all child bins."""
     children = []
 
-    rows = db.execute(
-        "SELECT id, name FROM bins WHERE parent_bin_id = ?",
-        (bin_id,)
-    )
+    rows = db.execute("SELECT id, name FROM bins WHERE parent_bin_id = ?", (bin_id,))
 
     for row in rows:
         children.append({"id": row["id"], "name": row["name"]})
@@ -920,10 +940,7 @@ async def download_bin_images(
     # Get the bin
     bin_data = bins_tools.get_bin(db, bin_id=bin_id)
     if isinstance(bin_data, dict) and "error" in bin_data:
-        return RedirectResponse(
-            url=f"/browse/bin/{bin_id}?error=Bin not found",
-            status_code=303
-        )
+        return RedirectResponse(url=f"/browse/bin/{bin_id}?error=Bin not found", status_code=303)
 
     # Get the path to this bin for folder structure
     bin_path = _get_bin_path(db, bin_id)
@@ -933,17 +950,10 @@ async def download_bin_images(
 
     # Get all child bins recursively
     def add_children(parent_id: str, parent_path: list[str]):
-        rows = db.execute(
-            "SELECT id, name FROM bins WHERE parent_bin_id = ?",
-            (parent_id,)
-        )
+        rows = db.execute("SELECT id, name FROM bins WHERE parent_bin_id = ?", (parent_id,))
         for row in rows:
             child_path = parent_path + [row["name"]]
-            bins_to_process.append({
-                "id": row["id"],
-                "name": row["name"],
-                "path": child_path
-            })
+            bins_to_process.append({"id": row["id"], "name": row["name"], "path": child_path})
             add_children(row["id"], child_path)
 
     add_children(bin_id, bin_path)
@@ -951,7 +961,7 @@ async def download_bin_images(
     # Create zip file in memory
     zip_buffer = io.BytesIO()
 
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for bin_info in bins_to_process:
             # Build sanitized folder path
             folder_path = "/".join(_sanitize_name(p) for p in bin_info["path"])
@@ -994,9 +1004,7 @@ async def download_bin_images(
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
-        headers={
-            "Content-Disposition": f'attachment; filename="{root_name}-images.zip"'
-        }
+        headers={"Content-Disposition": f'attachment; filename="{root_name}-images.zip"'},
     )
 
 
@@ -1065,11 +1073,13 @@ async def quick_add_save_bin(
             status_code=400,
         )
 
-    return JSONResponse({
-        "success": True,
-        "bin_id": result.id,
-        "bin_name": result.name,
-    })
+    return JSONResponse(
+        {
+            "success": True,
+            "bin_id": result.id,
+            "bin_name": result.name,
+        }
+    )
 
 
 @router.post("/browse/bin/{bin_id}/quick-add/upload-photo/{child_bin_id}")
@@ -1107,11 +1117,13 @@ async def quick_add_upload_photo(
             status_code=400,
         )
 
-    return JSONResponse({
-        "success": True,
-        "image_id": result.id,
-        "file_path": result.file_path,
-    })
+    return JSONResponse(
+        {
+            "success": True,
+            "image_id": result.id,
+            "file_path": result.file_path,
+        }
+    )
 
 
 @router.post("/browse/bin/{bin_id}/quick-add/delete-photo/{image_id}")
@@ -1172,18 +1184,20 @@ async def history_page(
         if isinstance(created_at, str):
             created_at = datetime.fromisoformat(created_at)
         date_key = created_at.strftime("%Y-%m-%d")
-        history_by_date[date_key].append({
-            "id": row["id"],
-            "item_id": row["item_id"],
-            "item_name": row["item_name"] or "Unknown Item",
-            "item_photo": row["item_photo"],
-            "action": row["action"],
-            "quantity_change": row["quantity_change"],
-            "notes": row["notes"],
-            "created_at": created_at,
-            "bin_name": row["bin_name"],
-            "location_name": row["location_name"],
-        })
+        history_by_date[date_key].append(
+            {
+                "id": row["id"],
+                "item_id": row["item_id"],
+                "item_name": row["item_name"] or "Unknown Item",
+                "item_photo": row["item_photo"],
+                "action": row["action"],
+                "quantity_change": row["quantity_change"],
+                "notes": row["notes"],
+                "created_at": created_at,
+                "bin_name": row["bin_name"],
+                "location_name": row["location_name"],
+            }
+        )
 
     # Convert to sorted list of (date, entries)
     history_dates = sorted(history_by_date.items(), key=lambda x: x[0], reverse=True)

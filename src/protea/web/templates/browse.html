@@ -4,7 +4,50 @@
 
 {% block content %}
 <div class="p-4 lg:p-6 max-w-4xl mx-auto" data-page="browse">
-    <h1 class="text-2xl font-bold text-fynbos-900 mb-6">Browse Inventory</h1>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-fynbos-900">Browse Inventory</h1>
+        <button type="button" onclick="toggleCreateLocationForm()"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-protea-600 hover:bg-protea-700 text-white rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Location
+        </button>
+    </div>
+
+    <!-- Create Location Form (hidden by default) -->
+    <div id="create-location-form" class="hidden bg-cream-light rounded-xl border border-cream-dark p-4 mb-6">
+        <h3 class="font-medium text-fynbos-800 mb-3">Create New Location</h3>
+        <form action="/browse/create-location" method="post" class="space-y-4">
+            <div>
+                <label for="location_name" class="block text-sm text-fynbos-600 mb-1">Name</label>
+                <input type="text"
+                       id="location_name"
+                       name="name"
+                       required
+                       placeholder="e.g., Garage, Workshop, Storage Room..."
+                       class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+            <div>
+                <label for="location_description" class="block text-sm text-fynbos-600 mb-1">Description (optional)</label>
+                <input type="text"
+                       id="location_description"
+                       name="description"
+                       placeholder="Describe this location..."
+                       class="w-full px-3 py-2 border border-cream-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-fynbos-400 text-base">
+            </div>
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="bg-protea-600 hover:bg-protea-700 active:bg-protea-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                    Create Location
+                </button>
+                <button type="button" onclick="toggleCreateLocationForm()"
+                        class="bg-fynbos-200 hover:bg-fynbos-300 text-fynbos-700 px-4 py-2 rounded-lg transition-colors font-medium">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
 
     {# Macro for rendering nested bins recursively #}
     {% macro render_bin(bin_node, depth=0) %}
@@ -137,8 +180,57 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
         <h2 class="text-xl font-semibold text-fynbos-700">No Locations Yet</h2>
-        <p class="text-fynbos-500 mt-2">Add a location through Claude Desktop to get started.</p>
+        <p class="text-fynbos-500 mt-2">Create a location to start organizing your inventory.</p>
+        <button type="button" onclick="toggleCreateLocationForm()"
+                class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-protea-600 hover:bg-protea-700 text-white rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Location
+        </button>
     </div>
     {% endif %}
 </div>
+
+<script>
+function toggleCreateLocationForm() {
+    const form = document.getElementById('create-location-form');
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) {
+        document.getElementById('location_name').focus();
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function toggleLocation(locationId) {
+    const container = document.getElementById('location-bins-' + locationId);
+    const chevron = document.querySelector('[data-location-toggle="' + locationId + '"]');
+    if (container) {
+        container.classList.toggle('hidden');
+        if (chevron) {
+            chevron.classList.toggle('rotate-90');
+        }
+    }
+}
+
+function toggleBin(binId) {
+    const container = document.getElementById('bin-children-' + binId);
+    const chevron = document.querySelector('[data-bin-toggle="' + binId + '"]');
+    if (container) {
+        container.classList.toggle('hidden');
+        if (chevron) {
+            chevron.classList.toggle('rotate-90');
+        }
+    }
+}
+</script>
+
+<style>
+.toggle-chevron {
+    transition: transform 0.2s ease;
+}
+.toggle-chevron.rotate-90 {
+    transform: rotate(90deg);
+}
+</style>
 {% endblock %}
