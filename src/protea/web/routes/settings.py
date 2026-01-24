@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from protea.db.connection import Database
 from protea.db.models import User
+from protea.services import system_settings
 from protea.tools import auth as auth_tools
 from protea.web.app import templates
 from protea.web.dependencies import get_db, require_auth
@@ -20,9 +21,13 @@ async def settings_page(
     db: Database = Depends(get_db),
     user: User = Depends(require_auth),
 ):
-    """Render settings page with profile and API keys."""
+    """Render settings page with profile, API keys, and embedding settings."""
     # Get user's API keys
     api_keys = auth_tools.get_user_api_keys(db, user.id)
+
+    # Get embedding model settings
+    current_model = system_settings.get_current_model(db)
+    regen_status = system_settings.get_regen_status(db)
 
     return templates.TemplateResponse(
         request=request,
@@ -33,6 +38,9 @@ async def settings_page(
             "message": message,
             "error": error,
             "active_nav": "settings",
+            "embedding_models": system_settings.EMBEDDING_MODELS,
+            "current_model": current_model,
+            "regen_status": regen_status,
         },
     )
 
@@ -97,6 +105,38 @@ async def change_password(
         url="/settings?message=Password changed successfully",
         status_code=303,
     )
+
+
+@router.post("/embedding-model")
+async def change_embedding_model(
+    request: Request,
+    model: str = Form(...),
+    db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
+):
+    """Change the embedding model and regenerate embeddings."""
+    result = system_settings.change_embedding_model(db, model)
+
+    if "error" in result:
+        return RedirectResponse(
+            url=f"/settings?error={result['error']}",
+            status_code=303,
+        )
+
+    return RedirectResponse(
+        url=f"/settings?message={result.get('message', 'Model updated')}",
+        status_code=303,
+    )
+
+
+@router.get("/embedding-status")
+async def get_embedding_status(
+    request: Request,
+    db: Database = Depends(get_db),
+    user: User = Depends(require_auth),
+):
+    """Get current embedding regeneration status (for polling)."""
+    return system_settings.get_regen_status(db)
 
 
 @router.post("/api-keys/create")
