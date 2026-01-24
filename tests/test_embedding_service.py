@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from protea.config import settings
 from protea.services import embedding_service
 
 
@@ -70,15 +71,15 @@ class TestEmbeddingConversion:
 
         np.testing.assert_array_almost_equal(original, restored)
 
-    def test_embedding_dimension_384(self):
-        """Test that real embedding has 384 dimensions."""
+    def test_embedding_dimension(self):
+        """Test that real embedding has correct dimensions per config."""
         if not embedding_service.is_available():
             pytest.skip("Embedding service not available")
 
         embedding_bytes = embedding_service.generate_embedding("test text")
         embedding = embedding_service.bytes_to_embedding(embedding_bytes)
 
-        assert embedding.shape == (384,)
+        assert embedding.shape == (settings.embedding_dimension,)
 
     def test_large_embedding_roundtrip(self):
         """Test roundtrip with 384-dimension embedding."""
@@ -190,9 +191,9 @@ class TestGenerateEmbedding:
         assert isinstance(result, bytes)
 
     def test_correct_byte_size(self):
-        """Test that embedding has correct byte size (384 floats * 4 bytes)."""
+        """Test that embedding has correct byte size (dimensions * 4 bytes)."""
         result = embedding_service.generate_embedding("test text")
-        assert len(result) == 384 * 4
+        assert len(result) == settings.embedding_dimension * 4
 
     def test_different_texts_different_embeddings(self):
         """Test that different texts produce different embeddings."""
@@ -232,9 +233,9 @@ class TestGenerateQueryEmbedding:
         assert isinstance(result, np.ndarray)
 
     def test_correct_dimensions(self):
-        """Test that query embedding has 384 dimensions."""
+        """Test that query embedding has correct dimensions per config."""
         result = embedding_service.generate_query_embedding("test query")
-        assert result.shape == (384,)
+        assert result.shape == (settings.embedding_dimension,)
 
     def test_query_matches_item_embedding(self):
         """Test that query embedding is compatible with item embedding."""

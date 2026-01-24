@@ -275,7 +275,13 @@ Results: Bolts, Screws, Nails ranked by relevance
 - [x] Lower vector-only threshold from 0.4 to 0.25 (for items only found via vector)
 - [x] Add comprehensive vector search tests (50 tests in test_embedding_service.py and test_vector_search.py)
 
-### Phase 2: Category-Aware Expansion
+### Phase 2: Larger Model (Completed)
+- [x] Upgrade default model from all-MiniLM-L6-v2 to all-mpnet-base-v2
+- [x] Update embedding dimension from 384 to 768
+- [x] Update tests to use config-based dimensions
+- [x] Backfill script regenerates embeddings with new model
+
+### Phase 3: Category-Aware Expansion (Future)
 1. Add category_aliases migration
 2. Seed common category aliases
 3. Implement query expansion service

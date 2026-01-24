@@ -39,8 +39,8 @@ class Settings(BaseSettings):
     mcp_sse_host: str = "0.0.0.0"
 
     # Embedding/Vector search settings
-    embedding_model: str = "all-MiniLM-L6-v2"  # Fast, 384 dimensions
-    embedding_dimension: int = 384
+    embedding_model: str = "all-mpnet-base-v2"  # Better quality, 768 dimensions
+    embedding_dimension: int = 768
     embedding_enabled: bool = True  # Feature flag to disable vector search
     vector_search_weight: float = 0.5  # Weight for vector similarity in hybrid search
     fts_search_weight: float = 0.5  # Weight for FTS score in hybrid search
