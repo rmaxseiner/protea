@@ -8,37 +8,42 @@ Improve Protea's search functionality with better semantic understanding through
 
 Protea uses a hybrid search combining:
 - **FTS5 full-text search** for keyword matching
-- **Vector similarity** using `all-MiniLM-L6-v2` (22.7M parameters, 384 dimensions)
+- **Vector similarity** using `all-mpnet-base-v2` (109.5M parameters, 768 dimensions) - default
+- **Model selection** via Settings UI - users can switch between MiniLM and MPNet models
 
-### Current Limitations
-
-The all-MiniLM-L6-v2 model produces relatively low similarity scores for conceptually related but lexically different terms:
-
-| Query | Item | Similarity |
-|-------|------|------------|
-| "fastener" | "M6 Hex Bolts" | 0.35 |
-| "fastener" | "Wood Screws" | 0.34 |
-| "electronic component" | "10K Ohm Resistors" | 0.21 |
-| "electronic component" | "Arduino Uno" | 0.21 |
-
-With the 0.2 similarity threshold (lowered from 0.3 in Jan 2026), these items are now included but may rank lower than expected.
-
----
-
-## Feature 1: Larger Embedding Model Option
-
-### Proposal
-
-Add support for `all-mpnet-base-v2` as an optional higher-quality embedding model.
-
-### Model Comparison
+### Available Models
 
 | Model | Parameters | Disk Size | Dimensions | Quality |
 |-------|------------|-----------|------------|---------|
-| all-MiniLM-L6-v2 (current) | 22.7M | ~90MB | 384 | Good |
-| all-mpnet-base-v2 | 109.5M | ~420MB | 768 | Better |
+| all-MiniLM-L6-v2 | 22.7M | ~90MB | 384 | Good |
+| all-mpnet-base-v2 (default) | 109.5M | ~420MB | 768 | Better |
 
-### Similarity Improvement
+### Similarity Thresholds
+
+- **Inclusion threshold**: 0.2 (lowered from 0.3 in Jan 2026)
+- **Vector-only threshold**: 0.25 (for items only found via vector search)
+
+---
+
+## Feature 1: Embedding Model Selection (Completed)
+
+Users can select between embedding models via the Settings page in the web UI.
+
+### How to Use
+
+1. Navigate to **Settings** in the web UI
+2. Under **Search Settings**, select the desired embedding model
+3. Click **Save & Regenerate Embeddings**
+4. Wait for the background regeneration to complete (progress bar shows status)
+
+### Available Models
+
+| Model | Parameters | Disk Size | Dimensions | Quality |
+|-------|------------|-----------|------------|---------|
+| all-MiniLM-L6-v2 | 22.7M | ~90MB | 384 | Good |
+| all-mpnet-base-v2 (default) | 109.5M | ~420MB | 768 | Better |
+
+### Similarity Comparison
 
 | Query | Item | MiniLM | MPNet | Improvement |
 |-------|------|--------|-------|-------------|
@@ -47,50 +52,34 @@ Add support for `all-mpnet-base-v2` as an optional higher-quality embedding mode
 | "electronic component" | "10K Ohm Resistors" | 0.21 | 0.26 | +24% |
 | "power tool" | "Cordless Drill" | 0.44 | 0.48 | +9% |
 
-### Configuration
+### Implementation Details
 
-Add environment variable to select model:
-
-```bash
-# Default (smaller, faster)
-INVENTORY_EMBEDDING_MODEL=all-MiniLM-L6-v2
-
-# Optional (larger, better semantic understanding)
-INVENTORY_EMBEDDING_MODEL=all-mpnet-base-v2
-```
-
-### Implementation Steps
-
-1. **Update config.py**
-   - Add model choice validation
-   - Add embedding dimension auto-detection based on model
-
-2. **Update embedding_service.py**
-   - Handle different embedding dimensions
-   - Add model info logging on startup
-
-3. **Database migration**
-   - Embeddings are stored as BLOBs, so dimension change requires re-embedding
-   - Add `backfill_embeddings.py` script to regenerate embeddings
-   - Store model name in metadata table for tracking
-
-4. **Update Docker image**
-   - Consider separate image tags for mini vs full model
-   - Or download model on first run
+- **Settings storage**: `system_settings` table stores current model and regeneration status
+- **Background regeneration**: Runs in a separate thread to avoid blocking the UI
+- **Progress tracking**: Status polled via `/settings/embedding-status` endpoint
+- **Automatic reload**: Page refreshes when regeneration completes
 
 ### Trade-offs
 
-| Aspect | MiniLM (current) | MPNet |
-|--------|------------------|-------|
+| Aspect | MiniLM | MPNet (default) |
+|--------|--------|-----------------|
 | Docker image size | ~800MB | ~1.2GB |
 | RAM usage | ~500MB | ~1GB |
 | Embedding speed | ~5ms/item | ~15ms/item |
 | Semantic quality | Good | Better |
 | Startup time | ~2s | ~5s |
 
-### Recommendation
+### Configuration
 
-Keep MiniLM as default for resource-constrained deployments. Offer MPNet as opt-in for users who prioritize search quality over resource usage.
+The default model can also be set via environment variable:
+
+```bash
+# Default is now MPNet
+INVENTORY_EMBEDDING_MODEL=all-mpnet-base-v2
+
+# Or use MiniLM for resource-constrained deployments
+INVENTORY_EMBEDDING_MODEL=all-MiniLM-L6-v2
+```
 
 ---
 
@@ -280,6 +269,10 @@ Results: Bolts, Screws, Nails ranked by relevance
 - [x] Update embedding dimension from 384 to 768
 - [x] Update tests to use config-based dimensions
 - [x] Backfill script regenerates embeddings with new model
+- [x] Add Settings UI for model selection with automatic embedding regeneration
+- [x] Add system_settings table for storing model preference and regen status
+- [x] Background thread for regenerating embeddings with progress tracking
+- [x] Live progress bar in UI during regeneration
 
 ### Phase 3: Category-Aware Expansion (Future)
 1. Add category_aliases migration
@@ -287,13 +280,6 @@ Results: Bolts, Screws, Nails ranked by relevance
 3. Implement query expansion service
 4. Integrate into search_items()
 5. Add tests for expansion
-
-### Phase 3: Larger Model Option
-1. Update config for model selection
-2. Handle different embedding dimensions
-3. Add backfill script for model migration
-4. Update Docker build for optional model
-5. Document resource requirements
 
 ---
 
