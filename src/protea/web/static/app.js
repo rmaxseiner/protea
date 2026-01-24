@@ -241,10 +241,6 @@ function toggleLightboxZoom() {
 
 // htmx extensions
 document.body.addEventListener('htmx:afterSwap', function(event) {
-    // Scroll to top of results when search results update
-    if (event.target.id === 'search-results') {
-        event.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
     // Re-init lightbox for dynamically loaded content
     initLightbox();
 });
