@@ -24,12 +24,12 @@
             {% endif %}
 
             <!-- Item Info -->
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 overflow-hidden">
                 <div class="flex items-start justify-between gap-2">
-                    <h3 class="font-semibold text-fynbos-900 truncate">{{ result.item.name }}</h3>
+                    <h3 class="font-semibold text-fynbos-900 truncate flex-1 min-w-0">{{ result.item.name }}</h3>
 
                     <!-- Quantity -->
-                    <span class="text-fynbos-700 font-medium text-sm whitespace-nowrap">
+                    <span class="text-fynbos-700 font-medium text-sm whitespace-nowrap flex-shrink-0">
                         {% if result.item.quantity_type == 'exact' %}
                             {{ result.item.quantity_value }}{% if result.item.quantity_label %} {{ result.item.quantity_label }}{% endif %}
                         {% elif result.item.quantity_type == 'approximate' %}
@@ -41,29 +41,29 @@
                 </div>
 
                 <!-- Location -->
-                <p class="text-fynbos-500 text-sm mt-1">
+                <p class="text-fynbos-500 text-sm mt-1 truncate">
                     {{ result.location.name }} &rarr; {{ result.bin.name }}
                 </p>
 
                 <!-- Match score and description -->
-                <div class="flex items-center gap-2 mt-2">
+                <div class="flex items-center gap-2 mt-2 overflow-hidden">
                     {% set score_pct = (result.match_score * 100)|int %}
                     {% if score_pct >= 80 %}
-                    <span class="px-2 py-0.5 bg-protea-100 text-protea-600 text-xs font-medium rounded">
+                    <span class="px-2 py-0.5 bg-protea-100 text-protea-600 text-xs font-medium rounded flex-shrink-0">
                         {{ score_pct }}% match
                     </span>
                     {% elif score_pct >= 60 %}
-                    <span class="px-2 py-0.5 bg-fynbos-100 text-fynbos-600 text-xs font-medium rounded">
+                    <span class="px-2 py-0.5 bg-fynbos-100 text-fynbos-600 text-xs font-medium rounded flex-shrink-0">
                         {{ score_pct }}% match
                     </span>
                     {% else %}
-                    <span class="px-2 py-0.5 bg-fynbos-50 text-fynbos-500 text-xs font-medium rounded">
+                    <span class="px-2 py-0.5 bg-fynbos-50 text-fynbos-500 text-xs font-medium rounded flex-shrink-0">
                         {{ score_pct }}% match
                     </span>
                     {% endif %}
 
                     {% if result.item.description %}
-                    <span class="text-fynbos-400 text-xs truncate">{{ result.item.description[:50] }}{% if result.item.description|length > 50 %}...{% endif %}</span>
+                    <span class="text-fynbos-400 text-xs truncate min-w-0">{{ result.item.description[:50] }}{% if result.item.description|length > 50 %}...{% endif %}</span>
                     {% endif %}
                 </div>
             </div>

@@ -3,15 +3,16 @@
 {% block title %}Browse - Inventory{% endblock %}
 
 {% block content %}
-<div class="p-4 lg:p-6 max-w-4xl mx-auto" data-page="browse">
-    <div class="flex items-center justify-between mb-6">
+<div class="p-4 lg:p-6 max-w-4xl mx-auto overflow-hidden" data-page="browse">
+    <div class="flex items-center justify-between gap-4 mb-6">
         <h1 class="text-2xl font-bold text-fynbos-900">Browse Inventory</h1>
         <button type="button" onclick="toggleCreateLocationForm()"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-protea-600 hover:bg-protea-700 text-white rounded-lg transition-colors">
+                class="inline-flex items-center gap-2 px-3 py-2 bg-protea-600 hover:bg-protea-700 text-white rounded-lg transition-colors text-sm sm:text-base sm:px-4 flex-shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            Create Location
+            <span class="hidden sm:inline">Create Location</span>
+            <span class="sm:hidden">Add</span>
         </button>
     </div>
 
@@ -69,36 +70,36 @@
             <div class="w-10 flex-shrink-0"></div>
             {% endif %}
             <a href="/browse/bin/{{ bin_node.id }}"
-               class="flex-1 flex items-center justify-between px-2 py-3 hover:bg-fynbos-50 transition-colors">
-                <div class="flex items-center gap-3">
+               class="flex-1 flex items-center px-2 py-3 hover:bg-fynbos-50 transition-colors min-w-0 overflow-hidden">
+                <div class="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                     {% if bin_node.children %}
                     {# Folder icon for bins with children #}
-                    <svg class="w-5 h-5 text-fynbos-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-fynbos-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                     </svg>
                     {% else %}
                     {# Box icon for leaf bins #}
-                    <svg class="w-5 h-5 text-fynbos-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-fynbos-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                     </svg>
                     {% endif %}
-                    <div>
-                        <span class="font-medium text-fynbos-800">{{ bin_node.name }}</span>
+                    <div class="min-w-0 flex-1 overflow-hidden">
+                        <span class="font-medium text-fynbos-800 block truncate">{{ bin_node.name }}</span>
                         {% if bin_node.description %}
-                        <p class="text-sm text-fynbos-500">{{ bin_node.description }}</p>
+                        <p class="text-sm text-fynbos-500 truncate">{{ bin_node.description }}</p>
                         {% endif %}
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 flex-shrink-0 ml-2">
                     {% if bin_node.child_count > 0 %}
-                    <span class="text-xs text-fynbos-400 bg-fynbos-100 px-2 py-0.5 rounded">
+                    <span class="hidden sm:inline text-xs text-fynbos-400 bg-fynbos-100 px-2 py-0.5 rounded whitespace-nowrap">
                         {{ bin_node.child_count }} sub-bin{% if bin_node.child_count != 1 %}s{% endif %}
                     </span>
                     {% endif %}
-                    <span class="text-sm text-fynbos-500">
+                    <span class="text-sm text-fynbos-500 whitespace-nowrap">
                         {{ bin_node.item_count }} item{% if bin_node.item_count != 1 %}s{% endif %}
                     </span>
-                    <svg class="w-5 h-5 text-fynbos-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-fynbos-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </div>
@@ -134,24 +135,24 @@
                 <div class="w-11 flex-shrink-0"></div>
                 {% endif %}
                 <a href="/browse/location/{{ loc_data.location.id }}"
-                   class="flex-1 flex items-center justify-between px-2 py-3 hover:bg-fynbos-200 transition-colors">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-6 h-6 text-fynbos-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="flex-1 flex items-center px-2 py-3 hover:bg-fynbos-200 transition-colors min-w-0 overflow-hidden">
+                    <div class="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
+                        <svg class="w-6 h-6 text-fynbos-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <div>
-                            <h2 class="font-semibold text-fynbos-900">{{ loc_data.location.name }}</h2>
+                        <div class="min-w-0 flex-1 overflow-hidden">
+                            <h2 class="font-semibold text-fynbos-900 truncate">{{ loc_data.location.name }}</h2>
                             {% if loc_data.location.description %}
-                            <p class="text-sm text-fynbos-500">{{ loc_data.location.description }}</p>
+                            <p class="text-sm text-fynbos-500 truncate">{{ loc_data.location.description }}</p>
                             {% endif %}
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="bg-fynbos-200 text-fynbos-700 text-sm px-2 py-1 rounded">
+                    <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                        <span class="bg-fynbos-200 text-fynbos-700 text-sm px-2 py-1 rounded whitespace-nowrap">
                             {{ loc_data.bin_count }} bin{% if loc_data.bin_count != 1 %}s{% endif %}
                         </span>
-                        <svg class="w-5 h-5 text-fynbos-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-fynbos-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </div>
