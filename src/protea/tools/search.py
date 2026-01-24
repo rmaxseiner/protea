@@ -165,8 +165,10 @@ def _vector_search(
     similarities = embedding_service.batch_cosine_similarity(query_embedding, embeddings)
 
     for row, similarity in zip(row_list, similarities):
-        # Only include items with reasonable similarity (threshold 0.3)
-        if similarity >= 0.3:
+        # Only include items with reasonable similarity (threshold 0.2)
+        # Note: 0.3 was too aggressive and filtered valid semantic matches
+        # like "fastener" -> "bolts" (0.35) or "electronic component" -> "resistors" (0.21)
+        if similarity >= 0.2:
             results[row["id"]] = (row, similarity)
 
     return results
@@ -251,7 +253,9 @@ def search_items(
             # No FTS match, only vector similarity
             combined = vector_score * vector_weight
             # Require reasonable similarity for vector-only matches
-            if vector_score >= 0.4:
+            # Lowered from 0.4 to 0.25 to allow abstract queries like
+            # "fastener" to find "M6 Hex Bolts" (similarity ~0.25)
+            if vector_score >= 0.25:
                 combined_scores[item_id] = (row, combined)
 
     # Convert to SearchResult objects
