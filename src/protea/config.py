@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Database
-    database_path: Path = Path("data/inventory.db")
+    database_path: Path = Path("data/db/inventory.db")
 
     # Image storage
     image_base_path: Path = Path("data/images")
