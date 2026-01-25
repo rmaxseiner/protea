@@ -156,20 +156,24 @@ def extract_items_from_image(
             elif quantity_estimate.startswith("approximate:"):
                 quantity_type = "approximate"
                 quantity_value = 1
-                quantity_label = quantity_estimate.split(":", 1)[1] if ":" in quantity_estimate else "various"
+                quantity_label = (
+                    quantity_estimate.split(":", 1)[1] if ":" in quantity_estimate else "various"
+                )
             else:
                 quantity_type = "boolean"
                 quantity_value = 1
                 quantity_label = None
 
-            items.append({
-                "name": item.get("name", "Unknown item"),
-                "quantity_type": quantity_type,
-                "quantity_value": quantity_value,
-                "quantity_label": quantity_label,
-                "confidence": item.get("confidence", 0.5),
-                "category_suggestion": item.get("category_suggestion"),
-            })
+            items.append(
+                {
+                    "name": item.get("name", "Unknown item"),
+                    "quantity_type": quantity_type,
+                    "quantity_value": quantity_value,
+                    "quantity_label": quantity_label,
+                    "confidence": item.get("confidence", 0.5),
+                    "category_suggestion": item.get("category_suggestion"),
+                }
+            )
 
         return {
             "items": items,
@@ -212,7 +216,8 @@ def lookup_product(
 ) -> dict:
     """Lookup product details from barcode/ASIN.
 
-    Note: This is a stub implementation. Real API integration coming later.
+    Uses UPCitemdb API for UPC/EAN lookups (free tier: 100 requests/day).
+    Amazon Product API for ASIN lookups (requires configuration).
 
     Args:
         code: Product code (UPC, EAN, ASIN, etc.)
@@ -221,27 +226,6 @@ def lookup_product(
     Returns:
         Product information dict
     """
-    # Stub implementation - returns mock data
-    # Real implementation would call Amazon Product API or UPCitemdb
+    from protea.services.product_lookup import product_lookup
 
-    # Detect code type if not specified
-    if not code_type:
-        if code.startswith("B0") and len(code) == 10:
-            code_type = "asin"
-        elif len(code) == 12 and code.isdigit():
-            code_type = "upc"
-        elif len(code) == 13 and code.isdigit():
-            code_type = "ean"
-        else:
-            code_type = "unknown"
-
-    return {
-        "name": f"Product {code}",
-        "description": f"Product looked up via {code_type}: {code}",
-        "contents": [],
-        "source_url": None,
-        "source": code_type,
-        "code": code,
-        "_stub": True,
-        "_message": "This is a stub implementation. Configure Amazon/UPC API keys for real lookups.",
-    }
+    return product_lookup.lookup(code, code_type)

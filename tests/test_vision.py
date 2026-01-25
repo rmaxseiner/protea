@@ -8,50 +8,63 @@ from protea.tools import vision
 
 
 # =============================================================================
-# Product Lookup Tests (Stub Implementation)
+# Product Lookup Tests (via product_lookup service)
 # =============================================================================
 
 
 class TestLookupProduct:
-    """Tests for lookup_product stub function."""
+    """Tests for lookup_product function that delegates to product_lookup service."""
 
     def test_lookup_asin(self):
-        """Test looking up an ASIN code."""
+        """Test looking up an ASIN code (stub - Amazon API not implemented)."""
         result = vision.lookup_product("B0ABC12345")
 
+        # ASIN lookup returns stub since Amazon API isn't configured
         assert result["_stub"] is True
         assert result["code"] == "B0ABC12345"
-        assert result["source"] == "asin"
-        assert "Product B0ABC12345" in result["name"]
+        assert result["code_type"] == "asin"
 
-    def test_lookup_upc(self):
-        """Test looking up a UPC code."""
+    @patch("protea.services.product_lookup.requests.get")
+    def test_lookup_upc(self, mock_get):
+        """Test looking up a UPC code via UPCitemdb API."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"code": "OK", "items": []}
+        mock_get.return_value = mock_response
+
         result = vision.lookup_product("123456789012")
 
-        assert result["_stub"] is True
         assert result["code"] == "123456789012"
-        assert result["source"] == "upc"
+        assert result["code_type"] == "upc"
+        mock_get.assert_called_once()
 
-    def test_lookup_ean(self):
-        """Test looking up an EAN code."""
+    @patch("protea.services.product_lookup.requests.get")
+    def test_lookup_ean(self, mock_get):
+        """Test looking up an EAN code via UPCitemdb API."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"code": "OK", "items": []}
+        mock_get.return_value = mock_response
+
         result = vision.lookup_product("1234567890123")
 
-        assert result["_stub"] is True
         assert result["code"] == "1234567890123"
-        assert result["source"] == "ean"
+        assert result["code_type"] == "upc"  # EAN uses same lookup as UPC
+        mock_get.assert_called_once()
 
-    def test_lookup_with_explicit_type(self):
-        """Test looking up with explicit code type."""
-        result = vision.lookup_product("CUSTOMCODE", code_type="custom")
+    def test_lookup_with_explicit_asin_type(self):
+        """Test looking up with explicit ASIN code type."""
+        result = vision.lookup_product("CUSTOMCODE", code_type="asin")
 
-        assert result["source"] == "custom"
+        assert result["code_type"] == "asin"
         assert result["code"] == "CUSTOMCODE"
 
     def test_lookup_unknown_type(self):
-        """Test looking up unknown code type."""
+        """Test looking up unknown code type returns stub."""
         result = vision.lookup_product("ABC")
 
-        assert result["source"] == "unknown"
+        assert result["code_type"] == "unknown"
+        assert result["_stub"] is True
 
 
 # =============================================================================
@@ -64,7 +77,7 @@ class TestExtractItemsFromImage:
 
     def test_no_api_key(self):
         """Test error when API key is not configured."""
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = None
 
             result = vision.extract_items_from_image("base64data")
@@ -77,33 +90,35 @@ class TestExtractItemsFromImage:
         """Test successful item extraction."""
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "items": [
-                {
-                    "name": "M3 Screws",
-                    "quantity_estimate": "exact:50",
-                    "confidence": 0.95,
-                    "category_suggestion": "Screws"
-                },
-                {
-                    "name": "Washers",
-                    "quantity_estimate": "approximate:assorted",
-                    "confidence": 0.8,
-                    "category_suggestion": "Washers"
-                }
-            ],
-            "labels_detected": ["ASIN: B08XYZ"],
-            "suggestions": "Hardware kit"
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "items": [
+                    {
+                        "name": "M3 Screws",
+                        "quantity_estimate": "exact:50",
+                        "confidence": 0.95,
+                        "category_suggestion": "Screws",
+                    },
+                    {
+                        "name": "Washers",
+                        "quantity_estimate": "approximate:assorted",
+                        "confidence": 0.8,
+                        "category_suggestion": "Washers",
+                    },
+                ],
+                "labels_detected": ["ASIN: B08XYZ"],
+                "suggestions": "Hardware kit",
+            }
+        )
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64imagedata")
 
         assert "items" in result
@@ -127,26 +142,28 @@ class TestExtractItemsFromImage:
         """Test parsing boolean quantity type."""
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "items": [
-                {
-                    "name": "Screwdriver",
-                    "quantity_estimate": "boolean",
-                    "confidence": 0.9,
-                }
-            ],
-            "labels_detected": [],
-            "suggestions": ""
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "items": [
+                    {
+                        "name": "Screwdriver",
+                        "quantity_estimate": "boolean",
+                        "confidence": 0.9,
+                    }
+                ],
+                "labels_detected": [],
+                "suggestions": "",
+            }
+        )
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         assert result["items"][0]["quantity_type"] == "boolean"
@@ -171,11 +188,11 @@ That's what I found."""
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         assert "items" in result
@@ -190,11 +207,11 @@ That's what I found."""
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         assert "error" in result
@@ -207,11 +224,11 @@ That's what I found."""
         mock_client = MagicMock()
         mock_client.messages.create.side_effect = anthropic.APIConnectionError(request=MagicMock())
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         assert "error" in result
@@ -227,16 +244,14 @@ That's what I found."""
 
         mock_client = MagicMock()
         mock_client.messages.create.side_effect = anthropic.RateLimitError(
-            message="Rate limit exceeded",
-            response=mock_response,
-            body={}
+            message="Rate limit exceeded", response=mock_response, body={}
         )
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         assert "error" in result
@@ -252,16 +267,14 @@ That's what I found."""
 
         mock_client = MagicMock()
         mock_client.messages.create.side_effect = anthropic.APIStatusError(
-            message="Internal server error",
-            response=mock_response,
-            body={}
+            message="Internal server error", response=mock_response, body={}
         )
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         assert "error" in result
@@ -272,11 +285,11 @@ That's what I found."""
         mock_client = MagicMock()
         mock_client.messages.create.side_effect = RuntimeError("Unexpected error")
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         assert "error" in result
@@ -286,20 +299,18 @@ That's what I found."""
         """Test that context is included in the prompt."""
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "items": [],
-            "labels_detected": [],
-            "suggestions": ""
-        })
+        mock_response.content[0].text = json.dumps(
+            {"items": [], "labels_detected": [], "suggestions": ""}
+        )
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 vision.extract_items_from_image("base64data", context="electronics drawer")
 
         # Check that the context was included in the API call
@@ -312,20 +323,18 @@ That's what I found."""
         """Test JPEG media type detection from base64 header."""
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "items": [],
-            "labels_detected": [],
-            "suggestions": ""
-        })
+        mock_response.content[0].text = json.dumps(
+            {"items": [], "labels_detected": [], "suggestions": ""}
+        )
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 # /9j/ is JPEG header
                 vision.extract_items_from_image("/9j/4AAQrest")
 
@@ -338,20 +347,18 @@ That's what I found."""
         """Test PNG media type detection from base64 header."""
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "items": [],
-            "labels_detected": [],
-            "suggestions": ""
-        })
+        mock_response.content[0].text = json.dumps(
+            {"items": [], "labels_detected": [], "suggestions": ""}
+        )
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 # iVBOR is PNG header
                 vision.extract_items_from_image("iVBORw0KGrest")
 
@@ -364,26 +371,28 @@ That's what I found."""
         """Test handling of invalid exact quantity value."""
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "items": [
-                {
-                    "name": "Item",
-                    "quantity_estimate": "exact:notanumber",
-                    "confidence": 0.9,
-                }
-            ],
-            "labels_detected": [],
-            "suggestions": ""
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "items": [
+                    {
+                        "name": "Item",
+                        "quantity_estimate": "exact:notanumber",
+                        "confidence": 0.9,
+                    }
+                ],
+                "labels_detected": [],
+                "suggestions": "",
+            }
+        )
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         # Should default to 1 if parsing fails
@@ -393,25 +402,27 @@ That's what I found."""
         """Test handling of items with missing fields."""
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "items": [
-                {
-                    # Only confidence, no name
-                    "confidence": 0.5
-                }
-            ],
-            "labels_detected": [],
-            "suggestions": ""
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "items": [
+                    {
+                        # Only confidence, no name
+                        "confidence": 0.5
+                    }
+                ],
+                "labels_detected": [],
+                "suggestions": "",
+            }
+        )
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch('protea.tools.vision.settings') as mock_settings:
+        with patch("protea.tools.vision.settings") as mock_settings:
             mock_settings.claude_api_key = "test-key"
             mock_settings.claude_model = "claude-3-haiku-20240307"
 
-            with patch('protea.tools.vision.anthropic.Anthropic', return_value=mock_client):
+            with patch("protea.tools.vision.anthropic.Anthropic", return_value=mock_client):
                 result = vision.extract_items_from_image("base64data")
 
         # Should use defaults
