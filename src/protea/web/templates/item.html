@@ -31,7 +31,7 @@
             <img src="/images/{{ item.photo_url }}"
                  alt="{{ item.name }}"
                  class="max-h-64 mx-auto rounded-lg shadow-md cursor-zoom-in"
-                 onclick="openLightbox(0)"
+                 onclick="openItemLightbox(0)"
                  data-lightbox-src="/images/{{ item.photo_url }}">
         </div>
         {% endif %}
@@ -351,23 +351,23 @@
 </div>
 
 <!-- Image Lightbox Modal -->
-<div id="lightbox" class="fixed inset-0 z-50 hidden bg-black/90 flex items-center justify-center" onclick="closeLightboxOnBackdrop(event)">
+<div id="item-lightbox" class="fixed inset-0 z-50 hidden bg-black/90 flex items-center justify-center" onclick="closeItemLightboxOnBackdrop(event)">
     <!-- Close button -->
-    <button onclick="closeLightbox()" class="absolute top-4 right-4 text-white/70 hover:text-white p-2 z-10" title="Close (Esc)">
+    <button onclick="closeItemLightbox()" class="absolute top-4 right-4 text-white/70 hover:text-white p-2 z-10" title="Close (Esc)">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
     </button>
 
     <!-- Previous button -->
-    <button onclick="navigateLightbox(-1)" id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 z-10 hidden" title="Previous (Left Arrow)">
+    <button onclick="navigateItemLightbox(-1)" id="item-lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 z-10 hidden" title="Previous (Left Arrow)">
         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
     </button>
 
     <!-- Next button -->
-    <button onclick="navigateLightbox(1)" id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 z-10 hidden" title="Next (Right Arrow)">
+    <button onclick="navigateItemLightbox(1)" id="item-lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 z-10 hidden" title="Next (Right Arrow)">
         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
@@ -375,19 +375,19 @@
 
     <!-- Image container -->
     <div class="max-w-[90vw] max-h-[85vh] relative">
-        <img id="lightbox-image" src="" alt="Enlarged image" class="max-w-full max-h-[85vh] object-contain">
+        <img id="item-lightbox-image" src="" alt="Enlarged image" class="max-w-full max-h-[85vh] object-contain">
 
         <!-- Bottom toolbar -->
         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 flex items-center justify-between">
             <!-- Image counter -->
-            <span id="lightbox-counter" class="text-white/80 text-sm"></span>
+            <span id="item-lightbox-counter" class="text-white/80 text-sm"></span>
 
             <!-- Copy button -->
-            <button onclick="copyLightboxImage()" id="copy-image-btn" class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
+            <button onclick="copyItemLightboxImage()" id="copy-image-btn" class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
                 </svg>
-                <span id="copy-btn-text">Copy Image</span>
+                <span id="item-copy-btn-text">Copy Image</span>
             </button>
         </div>
     </div>
@@ -398,18 +398,18 @@
 window.currentLightboxIndex = 0;
 
 // Get all lightbox image URLs
-window.getLightboxImages = function() {
+window.getItemLightboxImages = function() {
     const imgs = document.querySelectorAll('[data-lightbox-src]');
     return Array.from(imgs).map(img => img.dataset.lightboxSrc);
 };
 
-window.openLightbox = function(index) {
-    const lightboxImages = getLightboxImages();
+window.openItemLightbox = function(index) {
+    const lightboxImages = getItemLightboxImages();
     if (lightboxImages.length === 0) return;
 
     currentLightboxIndex = index;
-    const lightbox = document.getElementById('lightbox');
-    const img = document.getElementById('lightbox-image');
+    const lightbox = document.getElementById('item-lightbox');
+    const img = document.getElementById('item-lightbox-image');
 
     // Show lightbox first
     lightbox.classList.remove('hidden');
@@ -417,27 +417,27 @@ window.openLightbox = function(index) {
 
     // Then set image and update UI
     img.src = lightboxImages[index];
-    updateLightboxUI();
+    updateItemLightboxUI();
 
     // Add keyboard listener
-    document.addEventListener('keydown', handleLightboxKeydown);
+    document.addEventListener('keydown', handleItemLightboxKeydown);
 };
 
-window.closeLightbox = function() {
-    const lightbox = document.getElementById('lightbox');
+window.closeItemLightbox = function() {
+    const lightbox = document.getElementById('item-lightbox');
     lightbox.classList.add('hidden');
     document.body.style.overflow = '';
-    document.removeEventListener('keydown', handleLightboxKeydown);
+    document.removeEventListener('keydown', handleItemLightboxKeydown);
 };
 
-window.closeLightboxOnBackdrop = function(event) {
-    if (event.target.id === 'lightbox') {
-        closeLightbox();
+window.closeItemLightboxOnBackdrop = function(event) {
+    if (event.target.id === 'item-lightbox') {
+        closeItemLightbox();
     }
 };
 
-window.navigateLightbox = function(direction) {
-    const lightboxImages = getLightboxImages();
+window.navigateItemLightbox = function(direction) {
+    const lightboxImages = getItemLightboxImages();
     if (lightboxImages.length <= 1) return;
 
     currentLightboxIndex += direction;
@@ -448,16 +448,16 @@ window.navigateLightbox = function(direction) {
         currentLightboxIndex = 0;
     }
 
-    const img = document.getElementById('lightbox-image');
+    const img = document.getElementById('item-lightbox-image');
     img.src = lightboxImages[currentLightboxIndex];
-    updateLightboxUI();
+    updateItemLightboxUI();
 };
 
-window.updateLightboxUI = function() {
-    const lightboxImages = getLightboxImages();
-    const counter = document.getElementById('lightbox-counter');
-    const prevBtn = document.getElementById('lightbox-prev');
-    const nextBtn = document.getElementById('lightbox-next');
+window.updateItemLightboxUI = function() {
+    const lightboxImages = getItemLightboxImages();
+    const counter = document.getElementById('item-lightbox-counter');
+    const prevBtn = document.getElementById('item-lightbox-prev');
+    const nextBtn = document.getElementById('item-lightbox-next');
 
     counter.textContent = `${currentLightboxIndex + 1} / ${lightboxImages.length}`;
 
@@ -471,26 +471,26 @@ window.updateLightboxUI = function() {
         counter.classList.remove('hidden');
     }
 
-    document.getElementById('copy-btn-text').textContent = 'Copy Image';
+    document.getElementById('item-copy-btn-text').textContent = 'Copy Image';
 };
 
-window.handleLightboxKeydown = function(event) {
+window.handleItemLightboxKeydown = function(event) {
     switch (event.key) {
         case 'Escape':
-            closeLightbox();
+            closeItemLightbox();
             break;
         case 'ArrowLeft':
-            navigateLightbox(-1);
+            navigateItemLightbox(-1);
             break;
         case 'ArrowRight':
-            navigateLightbox(1);
+            navigateItemLightbox(1);
             break;
     }
 };
 
-window.copyLightboxImage = async function() {
-    const img = document.getElementById('lightbox-image');
-    const btnText = document.getElementById('copy-btn-text');
+window.copyItemLightboxImage = async function() {
+    const img = document.getElementById('item-lightbox-image');
+    const btnText = document.getElementById('item-copy-btn-text');
 
     try {
         const response = await fetch(img.src);
