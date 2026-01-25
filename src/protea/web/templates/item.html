@@ -30,8 +30,9 @@
         <div class="bg-fynbos-100 p-4">
             <img src="/images/{{ item.photo_url }}"
                  alt="{{ item.name }}"
-                 class="max-h-64 mx-auto rounded-lg shadow-md"
-                 data-lightbox="/images/{{ item.photo_url }}">
+                 class="max-h-64 mx-auto rounded-lg shadow-md cursor-zoom-in"
+                 onclick="openLightbox(0)"
+                 data-lightbox-src="/images/{{ item.photo_url }}">
         </div>
         {% endif %}
 
@@ -394,24 +395,16 @@
 
 <script>
 // Lightbox state
-let lightboxImages = [];
 let currentLightboxIndex = 0;
 
-// Initialize lightbox on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Collect all lightbox images
-    const thumbs = document.querySelectorAll('[data-lightbox]');
-    thumbs.forEach((thumb, index) => {
-        lightboxImages.push(thumb.dataset.lightbox);
-        thumb.style.cursor = 'zoom-in';
-        thumb.addEventListener('click', (e) => {
-            e.preventDefault();
-            openLightbox(index);
-        });
-    });
-});
+// Get all lightbox image URLs
+function getLightboxImages() {
+    const imgs = document.querySelectorAll('[data-lightbox-src]');
+    return Array.from(imgs).map(img => img.dataset.lightboxSrc);
+}
 
 function openLightbox(index) {
+    const lightboxImages = getLightboxImages();
     if (lightboxImages.length === 0) return;
 
     currentLightboxIndex = index;
@@ -442,6 +435,7 @@ function closeLightboxOnBackdrop(event) {
 }
 
 function navigateLightbox(direction) {
+    const lightboxImages = getLightboxImages();
     if (lightboxImages.length <= 1) return;
 
     currentLightboxIndex += direction;
@@ -458,6 +452,7 @@ function navigateLightbox(direction) {
 }
 
 function updateLightboxUI() {
+    const lightboxImages = getLightboxImages();
     const counter = document.getElementById('lightbox-counter');
     const prevBtn = document.getElementById('lightbox-prev');
     const nextBtn = document.getElementById('lightbox-next');
