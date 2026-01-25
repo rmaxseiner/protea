@@ -646,12 +646,20 @@ window.copyBinLightboxImage = async function() {
     const btnText = document.getElementById('bin-copy-btn-text');
 
     try {
-        // Fetch the image as a blob
-        const response = await fetch(img.src);
-        const blob = await response.blob();
+        btnText.textContent = 'Copying...';
 
-        // Create a ClipboardItem with the image
-        const item = new ClipboardItem({ [blob.type]: blob });
+        // Create a canvas to convert image to PNG (clipboard only supports PNG)
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        // Convert canvas to PNG blob
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+        // Create a ClipboardItem with the PNG image
+        const item = new ClipboardItem({ 'image/png': blob });
 
         // Write to clipboard
         await navigator.clipboard.write([item]);
