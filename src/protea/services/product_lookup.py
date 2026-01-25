@@ -1,14 +1,20 @@
-"""Product lookup service stub for protea.
+"""Product lookup service for protea.
 
-This is a stub implementation. Real API integration for Amazon Product API
-and UPCitemdb will be added in a future update.
+Provides product information lookup from barcodes (UPC/EAN) and ASINs.
+Uses UPCitemdb API for barcode lookups (free tier: 100 requests/day).
 """
 
 import logging
 
+import requests
+
 from protea.config import settings
 
 logger = logging.getLogger("protea")
+
+# UPCitemdb API endpoints
+UPCITEMDB_TRIAL_URL = "https://api.upcitemdb.com/prod/trial/lookup"
+UPCITEMDB_PAID_URL = "https://api.upcitemdb.com/prod/v1/lookup"
 
 
 class ProductLookupService:
@@ -47,27 +53,108 @@ class ProductLookupService:
         return self._stub_response(asin, "asin")
 
     def lookup_upc(self, upc: str) -> dict:
-        """Look up product by UPC barcode.
+        """Look up product by UPC barcode using UPCitemdb API.
 
         Args:
-            upc: Universal Product Code
+            upc: Universal Product Code (or EAN)
 
         Returns:
             Product information dict
         """
-        if not self.upcitemdb_configured:
-            logger.debug("UPCitemdb API not configured")
-            return self._stub_response(upc, "upc")
+        # Choose endpoint based on whether API key is configured
+        if self.upcitemdb_configured:
+            url = UPCITEMDB_PAID_URL
+            headers = {
+                "user_key": settings.upcitemdb_api_key,
+                "key_type": "3scale",
+            }
+        else:
+            # Use free trial endpoint (100 requests/day, no key needed)
+            url = UPCITEMDB_TRIAL_URL
+            headers = {}
 
-        # TODO: Implement real UPCitemdb lookup
-        # import requests
-        # response = requests.get(
-        #     f"https://api.upcitemdb.com/prod/trial/lookup?upc={upc}",
-        #     headers={"user_key": settings.upcitemdb_api_key}
-        # )
-        # ...
+        try:
+            logger.debug(f"Looking up UPC: {upc}")
+            response = requests.get(
+                url,
+                params={"upc": upc},
+                headers=headers,
+                timeout=10,
+            )
 
-        return self._stub_response(upc, "upc")
+            if response.status_code == 429:
+                logger.warning("UPCitemdb rate limit exceeded")
+                return {
+                    "found": False,
+                    "code": upc,
+                    "code_type": "upc",
+                    "error": "Rate limit exceeded (100 requests/day for free tier)",
+                    "error_code": "RATE_LIMITED",
+                }
+
+            if response.status_code != 200:
+                logger.warning(f"UPCitemdb API error: {response.status_code}")
+                return {
+                    "found": False,
+                    "code": upc,
+                    "code_type": "upc",
+                    "error": f"API error: {response.status_code}",
+                    "error_code": "API_ERROR",
+                }
+
+            data = response.json()
+
+            # Check if product was found
+            if data.get("code") == "OK" and data.get("items"):
+                item = data["items"][0]  # Use first match
+                return {
+                    "found": True,
+                    "code": upc,
+                    "code_type": "upc",
+                    "name": item.get("title"),
+                    "description": item.get("description"),
+                    "brand": item.get("brand"),
+                    "category": item.get("category"),
+                    "image_url": item.get("images", [None])[0] if item.get("images") else None,
+                    "contents": [],
+                    "source_url": item.get("offers", [{}])[0].get("link")
+                    if item.get("offers")
+                    else None,
+                    "ean": item.get("ean"),
+                    "upc": item.get("upc"),
+                    "asin": item.get("asin"),
+                    "model": item.get("model"),
+                    "lowest_price": item.get("lowest_recorded_price"),
+                    "highest_price": item.get("highest_recorded_price"),
+                }
+            else:
+                return {
+                    "found": False,
+                    "code": upc,
+                    "code_type": "upc",
+                    "name": None,
+                    "description": None,
+                    "message": "Product not found in database",
+                }
+
+        except requests.exceptions.Timeout:
+            logger.warning("UPCitemdb API timeout")
+            return {
+                "found": False,
+                "code": upc,
+                "code_type": "upc",
+                "error": "API request timed out",
+                "error_code": "TIMEOUT",
+            }
+        except requests.exceptions.RequestException as e:
+            logger.error(f"UPCitemdb API request failed: {e}")
+            return {
+                "found": False,
+                "code": upc,
+                "code_type": "upc",
+                "error": f"API request failed: {str(e)}",
+                "error_code": "REQUEST_ERROR",
+            }
 
     def lookup_ean(self, ean: str) -> dict:
         """Look up product by EAN barcode.
