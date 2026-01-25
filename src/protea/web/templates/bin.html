@@ -546,15 +546,15 @@
 
 <script>
 // Lightbox state
-let currentLightboxIndex = 0;
+window.currentLightboxIndex = 0;
 
 // Get all lightbox image URLs
-function getLightboxImages() {
+window.getLightboxImages = function() {
     const imgs = document.querySelectorAll('[data-lightbox-src]');
     return Array.from(imgs).map(img => img.dataset.lightboxSrc);
-}
+};
 
-function openLightbox(index) {
+window.openLightbox = function(index) {
     const lightboxImages = getLightboxImages();
     if (lightboxImages.length === 0) return;
 
@@ -562,31 +562,33 @@ function openLightbox(index) {
     const lightbox = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-image');
 
-    img.src = lightboxImages[index];
-    updateLightboxUI();
-
+    // Show lightbox first
     lightbox.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
+    // Then set image and update UI
+    img.src = lightboxImages[index];
+    updateLightboxUI();
+
     // Add keyboard listener
     document.addEventListener('keydown', handleLightboxKeydown);
-}
+};
 
-function closeLightbox() {
+window.closeLightbox = function() {
     const lightbox = document.getElementById('lightbox');
     lightbox.classList.add('hidden');
     document.body.style.overflow = '';
     document.removeEventListener('keydown', handleLightboxKeydown);
-}
+};
 
-function closeLightboxOnBackdrop(event) {
+window.closeLightboxOnBackdrop = function(event) {
     // Only close if clicking the backdrop itself, not children
     if (event.target.id === 'lightbox') {
         closeLightbox();
     }
-}
+};
 
-function navigateLightbox(direction) {
+window.navigateLightbox = function(direction) {
     const lightboxImages = getLightboxImages();
     if (lightboxImages.length <= 1) return;
 
@@ -602,9 +604,9 @@ function navigateLightbox(direction) {
     const img = document.getElementById('lightbox-image');
     img.src = lightboxImages[currentLightboxIndex];
     updateLightboxUI();
-}
+};
 
-function updateLightboxUI() {
+window.updateLightboxUI = function() {
     const lightboxImages = getLightboxImages();
     const counter = document.getElementById('lightbox-counter');
     const prevBtn = document.getElementById('lightbox-prev');
@@ -623,9 +625,9 @@ function updateLightboxUI() {
 
     // Reset copy button text
     document.getElementById('copy-btn-text').textContent = 'Copy Image';
-}
+};
 
-function handleLightboxKeydown(event) {
+window.handleLightboxKeydown = function(event) {
     switch (event.key) {
         case 'Escape':
             closeLightbox();
@@ -637,9 +639,9 @@ function handleLightboxKeydown(event) {
             navigateLightbox(1);
             break;
     }
-}
+};
 
-async function copyLightboxImage() {
+window.copyLightboxImage = async function() {
     const img = document.getElementById('lightbox-image');
     const btnText = document.getElementById('copy-btn-text');
 
@@ -666,6 +668,6 @@ async function copyLightboxImage() {
             btnText.textContent = 'Copy Image';
         }, 2000);
     }
-}
+};
 </script>
 {% endblock %}
