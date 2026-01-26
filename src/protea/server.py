@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import sys
+import time
 from typing import Any
 
 from mcp.server import Server
@@ -423,6 +424,29 @@ TOOLS = [
             "required": ["item_id", "to_bin_id"],
         },
     ),
+    Tool(
+        name="move_items_bulk",
+        description="Move multiple items to target bins in a single operation. Much faster than calling move_item repeatedly. Use this when moving more than one item.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "moves": {
+                    "type": "array",
+                    "description": "List of moves to perform",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "item_id": {"type": "string", "description": "Item UUID"},
+                            "to_bin_id": {"type": "string", "description": "Target bin UUID"},
+                        },
+                        "required": ["item_id", "to_bin_id"],
+                    },
+                },
+                "notes": {"type": "string", "description": "Notes to apply to all moves"},
+            },
+            "required": ["moves"],
+        },
+    ),
     # Search
     Tool(
         name="search_items",
@@ -770,11 +794,16 @@ async def list_tools() -> list[Tool]:
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     """Route tool calls to appropriate handlers."""
+    start_time = time.perf_counter()
+    logger.info(f"Tool {name} started")
     try:
         result = await _handle_tool(name, arguments)
+        elapsed = time.perf_counter() - start_time
+        logger.info(f"Tool {name} completed in {elapsed:.3f}s")
         return [TextContent(type="text", text=_serialize_result(result))]
     except Exception as e:
-        logger.error(f"Error in tool {name}: {e}", exc_info=True)
+        elapsed = time.perf_counter() - start_time
+        logger.error(f"Tool {name} failed after {elapsed:.3f}s: {e}", exc_info=True)
         error_result = {
             "error": str(e),
             "error_code": "INTERNAL_ERROR",
@@ -825,6 +854,8 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
         return items.use_item(db, **arguments)
     elif name == "move_item":
         return items.move_item(db, **arguments)
+    elif name == "move_items_bulk":
+        return items.move_items_bulk(db, **arguments)
 
     # Search tools
     elif name == "search_items":

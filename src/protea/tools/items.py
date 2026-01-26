@@ -586,6 +586,137 @@ def use_item(
     )
 
 
+def move_items_bulk(
+    db: Database,
+    moves: list[dict],
+    notes: str | None = None,
+) -> dict:
+    """Move multiple items to target bins in a single operation.
+
+    This is much more efficient than calling move_item repeatedly when
+    moving many items, as it reduces MCP round-trips and database connections.
+
+    Args:
+        db: Database connection
+        moves: List of dicts with 'item_id' and 'to_bin_id' keys
+        notes: Optional notes to apply to all moves
+
+    Returns:
+        Dict with success count, failed items, and details
+    """
+    if not moves:
+        return {
+            "success": True,
+            "moved_count": 0,
+            "failed_count": 0,
+            "failed": [],
+            "moved_items": [],
+        }
+
+    moved_items = []
+    failed = []
+
+    # Collect all unique bin IDs to validate in one query
+    target_bin_ids = list(set(m.get("to_bin_id") for m in moves if m.get("to_bin_id")))
+    item_ids = [m.get("item_id") for m in moves if m.get("item_id")]
+
+    # Validate all target bins exist
+    valid_bins = set()
+    if target_bin_ids:
+        placeholders = ",".join("?" * len(target_bin_ids))
+        rows = db.execute(
+            f"SELECT id FROM bins WHERE id IN ({placeholders})", tuple(target_bin_ids)
+        )
+        valid_bins = {row["id"] for row in rows}
+
+    # Fetch all items in one query
+    items_by_id = {}
+    if item_ids:
+        placeholders = ",".join("?" * len(item_ids))
+        rows = db.execute(f"SELECT * FROM items WHERE id IN ({placeholders})", tuple(item_ids))
+        items_by_id = {row["id"]: row for row in rows}
+
+    # Process moves using a single connection for all updates
+    updated_at = datetime.now(timezone.utc)
+
+    with db.connection() as conn:
+        for move in moves:
+            item_id = move.get("item_id")
+            to_bin_id = move.get("to_bin_id")
+
+            if not item_id:
+                failed.append({"item_id": item_id, "error": "Missing item_id"})
+                continue
+
+            if not to_bin_id:
+                failed.append({"item_id": item_id, "error": "Missing to_bin_id"})
+                continue
+
+            if to_bin_id not in valid_bins:
+                failed.append({"item_id": item_id, "error": f"Target bin not found: {to_bin_id}"})
+                continue
+
+            row = items_by_id.get(item_id)
+            if not row:
+                failed.append({"item_id": item_id, "error": "Item not found"})
+                continue
+
+            from_bin_id = row["bin_id"]
+
+            # Skip if already in target bin
+            if from_bin_id == to_bin_id:
+                failed.append({"item_id": item_id, "error": "Item already in target bin"})
+                continue
+
+            # Update the item
+            conn.execute(
+                "UPDATE items SET bin_id = ?, updated_at = ? WHERE id = ?",
+                (to_bin_id, updated_at.isoformat(), item_id),
+            )
+
+            # Log activity
+            log = ActivityLog(
+                item_id=item_id,
+                action=ActivityAction.MOVED,
+                from_bin_id=from_bin_id,
+                to_bin_id=to_bin_id,
+                notes=notes,
+            )
+            conn.execute(
+                """
+                INSERT INTO activity_log (id, item_id, action, quantity_change, from_bin_id, to_bin_id, notes, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    log.id,
+                    log.item_id,
+                    log.action.value,
+                    log.quantity_change,
+                    log.from_bin_id,
+                    log.to_bin_id,
+                    log.notes,
+                    log.created_at.isoformat(),
+                ),
+            )
+
+            moved_items.append(
+                {
+                    "item_id": item_id,
+                    "name": row["name"],
+                    "from_bin_id": from_bin_id,
+                    "to_bin_id": to_bin_id,
+                }
+            )
+
+    return {
+        "success": len(failed) == 0,
+        "moved_count": len(moved_items),
+        "failed_count": len(failed),
+        "failed": failed if failed else None,
+        "moved_items": moved_items,
+    }
+
+
 def move_item(
     db: Database,
     item_id: str,

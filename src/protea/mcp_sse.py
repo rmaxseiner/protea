@@ -5,7 +5,7 @@ import logging
 import uvicorn
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Mount, Route
 
 from protea.config import auth_settings, settings
@@ -59,6 +59,9 @@ def create_sse_app() -> Starlette:
                 {"error": f"SSE connection error: {str(e)}"},
                 status_code=500,
             )
+
+        # Return empty response when SSE connection closes normally
+        return Response(status_code=200)
 
     # Health check endpoint (no auth required)
     async def health(request):

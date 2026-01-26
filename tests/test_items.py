@@ -185,3 +185,61 @@ def test_delete_items_bulk(test_db, sample_bin):
 
     assert result["deleted_count"] == 2
     assert result["failed"] == []
+
+
+def test_move_items_bulk(test_db, sample_location):
+    """Test bulk moving items to a different bin."""
+    from protea.tools import bins
+
+    bin1 = bins.create_bin(db=test_db, name="Source Bin", location_id=sample_location.id)
+    bin2 = bins.create_bin(db=test_db, name="Target Bin", location_id=sample_location.id)
+
+    item1 = items.add_item(db=test_db, name="Bulk Move 1", bin_id=bin1.id)
+    item2 = items.add_item(db=test_db, name="Bulk Move 2", bin_id=bin1.id)
+    item3 = items.add_item(db=test_db, name="Bulk Move 3", bin_id=bin1.id)
+
+    moves = [
+        {"item_id": item1.id, "to_bin_id": bin2.id},
+        {"item_id": item2.id, "to_bin_id": bin2.id},
+        {"item_id": item3.id, "to_bin_id": bin2.id},
+    ]
+
+    result = items.move_items_bulk(test_db, moves)
+
+    assert result["success"] is True
+    assert result["moved_count"] == 3
+    assert result["failed_count"] == 0
+
+    # Verify items are now in target bin
+    moved1 = items.get_item(test_db, item1.id)
+    assert moved1.bin_id == bin2.id
+
+
+def test_move_items_bulk_partial_failure(test_db, sample_location):
+    """Test bulk move with some invalid items."""
+    from protea.tools import bins
+
+    bin1 = bins.create_bin(db=test_db, name="Source", location_id=sample_location.id)
+    bin2 = bins.create_bin(db=test_db, name="Target", location_id=sample_location.id)
+
+    item1 = items.add_item(db=test_db, name="Valid Item", bin_id=bin1.id)
+
+    moves = [
+        {"item_id": item1.id, "to_bin_id": bin2.id},
+        {"item_id": "nonexistent-id", "to_bin_id": bin2.id},
+        {"item_id": item1.id, "to_bin_id": "nonexistent-bin"},
+    ]
+
+    result = items.move_items_bulk(test_db, moves)
+
+    assert result["success"] is False
+    assert result["moved_count"] == 1
+    assert result["failed_count"] == 2
+
+
+def test_move_items_bulk_empty_list(test_db):
+    """Test bulk move with empty list."""
+    result = items.move_items_bulk(test_db, [])
+
+    assert result["success"] is True
+    assert result["moved_count"] == 0
