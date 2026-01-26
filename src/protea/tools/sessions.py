@@ -1,7 +1,7 @@
 """Session workflow tools for protea."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from protea.config import settings
 from protea.db.connection import Database
@@ -26,7 +26,7 @@ def _calculate_staleness(session: Session) -> tuple[bool, int | None]:
     if session.status != SessionStatus.PENDING:
         return False, None
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     updated = session.updated_at
     if isinstance(updated, str):
         updated = datetime.fromisoformat(updated)
@@ -112,7 +112,9 @@ def create_session(
             "stale_sessions": [
                 {
                     "id": s.session.id,
-                    "created_at": s.session.created_at.isoformat() if isinstance(s.session.created_at, datetime) else s.session.created_at,
+                    "created_at": s.session.created_at.isoformat()
+                    if isinstance(s.session.created_at, datetime)
+                    else s.session.created_at,
                     "stale_minutes": s.stale_duration_minutes,
                     "pending_items": s.pending_item_count,
                 }
@@ -364,7 +366,7 @@ def add_image_to_session(
         # Update session updated_at
         conn.execute(
             "UPDATE sessions SET updated_at = ? WHERE id = ?",
-            (datetime.utcnow().isoformat(), session_id),
+            (datetime.now(timezone.utc).isoformat(), session_id),
         )
 
     return {
@@ -463,7 +465,7 @@ def add_pending_item(
         # Update session
         conn.execute(
             "UPDATE sessions SET updated_at = ? WHERE id = ?",
-            (datetime.utcnow().isoformat(), session_id),
+            (datetime.now(timezone.utc).isoformat(), session_id),
         )
 
     return pending
@@ -509,7 +511,7 @@ def update_pending_item(
     new_quantity_value = quantity_value if quantity_value is not None else row["quantity_value"]
     new_quantity_label = quantity_label if quantity_label is not None else row["quantity_label"]
     new_category_id = category_id if category_id is not None else row["category_id"]
-    updated_at = datetime.utcnow()
+    updated_at = datetime.now(timezone.utc)
 
     with db.connection() as conn:
         conn.execute(
@@ -580,7 +582,7 @@ def remove_pending_item(
         conn.execute("DELETE FROM pending_items WHERE id = ?", (pending_id,))
         conn.execute(
             "UPDATE sessions SET updated_at = ? WHERE id = ?",
-            (datetime.utcnow().isoformat(), session_id),
+            (datetime.now(timezone.utc).isoformat(), session_id),
         )
 
     return {"success": True}
@@ -633,7 +635,7 @@ def set_session_target(
                 "error_code": "NOT_FOUND",
             }
 
-    updated_at = datetime.utcnow()
+    updated_at = datetime.now(timezone.utc)
 
     with db.connection() as conn:
         conn.execute(
@@ -740,7 +742,9 @@ def commit_session(
             quantity_type=pending.quantity_type.value,
             quantity_value=pending.quantity_value,
             quantity_label=pending.quantity_label,
-            source=ItemSource.VISION.value if pending.source == PendingItemSource.VISION else ItemSource.MANUAL.value,
+            source=ItemSource.VISION.value
+            if pending.source == PendingItemSource.VISION
+            else ItemSource.MANUAL.value,
             source_reference=session_id,
         )
 
@@ -804,7 +808,7 @@ def commit_session(
             pass
 
     # Update session status
-    committed_at = datetime.utcnow()
+    committed_at = datetime.now(timezone.utc)
     commit_summary = {
         "items_added": len(items_added),
         "images_saved": len(images_saved),
@@ -880,7 +884,7 @@ def cancel_session(
     # Delete session images
     image_store.delete_session_images(session_id)
 
-    cancelled_at = datetime.utcnow()
+    cancelled_at = datetime.now(timezone.utc)
 
     with db.connection() as conn:
         conn.execute(

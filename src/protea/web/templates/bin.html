@@ -125,6 +125,7 @@
                     </a>
                     <form action="/browse/bin/{{ bin.id }}/delete-child/{{ child.id }}" method="post"
                           onsubmit="return confirm('Delete sub-bin \'{{ child.name }}\'? This cannot be undone.')">
+                        {{ csrf_token_input(request)|safe }}
                         <button type="submit"
                                 class="p-1 text-protea-400 hover:text-protea-600 hover:bg-protea-50 rounded"
                                 title="Delete sub-bin">
@@ -145,6 +146,7 @@
         <div class="bg-cream-light rounded-xl border border-cream-dark p-4">
             <h3 class="font-medium text-fynbos-800 mb-3">Add Sub-bin</h3>
             <form id="add-subbin-form" action="/browse/bin/{{ bin.id }}/create-child" method="post" class="space-y-4">
+                {{ csrf_token_input(request)|safe }}
                 <div>
                     <label for="child_name" class="block text-sm text-fynbos-600 mb-1">Name</label>
                     <input type="text"
@@ -225,6 +227,7 @@
                 <div class="absolute bottom-2 right-2 flex gap-1">
                     {% if not image.is_primary %}
                     <form action="/browse/bin/{{ bin.id }}/set-primary-image/{{ image.id }}" method="post">
+                        {{ csrf_token_input(request)|safe }}
                         <button type="submit"
                                 class="bg-fynbos-500 hover:bg-fynbos-600 active:bg-fynbos-700 text-white p-2 rounded-lg shadow-md"
                                 title="Set as primary">
@@ -236,6 +239,7 @@
                     {% endif %}
                     <form action="/browse/bin/{{ bin.id }}/delete-image/{{ image.id }}" method="post"
                           onsubmit="return confirm('Delete this image?')">
+                        {{ csrf_token_input(request)|safe }}
                         <button type="submit"
                                 class="bg-protea-500 hover:bg-protea-600 active:bg-protea-700 text-white p-2 rounded-lg shadow-md"
                                 title="Delete image">
@@ -337,6 +341,7 @@
     <div id="add-item-form" class="hidden bg-cream-light rounded-xl border border-cream-dark p-4 mb-4">
         <h3 class="font-medium text-fynbos-800 mb-3">Add New Item</h3>
         <form action="/browse/bin/{{ bin.id }}/add-item" method="post" class="space-y-4">
+            {{ csrf_token_input(request)|safe }}
             <div>
                 <label for="item_name" class="block text-sm text-fynbos-600 mb-1">Name *</label>
                 <input type="text"

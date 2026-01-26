@@ -1,7 +1,7 @@
 """Pydantic models for protea database entities."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -11,6 +11,11 @@ from pydantic import BaseModel, Field
 def generate_id() -> str:
     """Generate a UUID string for entity IDs."""
     return str(uuid.uuid4())
+
+
+def utc_now() -> datetime:
+    """Return current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 
 class QuantityType(str, Enum):
@@ -63,8 +68,8 @@ class Location(BaseModel):
     id: str = Field(default_factory=generate_id)
     name: str
     description: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 class Bin(BaseModel):
@@ -79,8 +84,8 @@ class Bin(BaseModel):
     location_id: str
     parent_bin_id: Optional[str] = None  # Parent bin for nesting (None = root level)
     description: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 class BinImage(BaseModel):
@@ -97,7 +102,7 @@ class BinImage(BaseModel):
     width: Optional[int] = None
     height: Optional[int] = None
     file_size_bytes: Optional[int] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
 class Category(BaseModel):
@@ -106,7 +111,7 @@ class Category(BaseModel):
     id: str = Field(default_factory=generate_id)
     name: str
     parent_id: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
 class Item(BaseModel):
@@ -124,8 +129,8 @@ class Item(BaseModel):
     source_reference: Optional[str] = None
     photo_url: Optional[str] = None
     notes: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 class ItemAlias(BaseModel):
@@ -146,7 +151,7 @@ class ActivityLog(BaseModel):
     from_bin_id: Optional[str] = None
     to_bin_id: Optional[str] = None
     notes: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
 # --- Session Models ---
@@ -159,8 +164,8 @@ class Session(BaseModel):
     status: SessionStatus = SessionStatus.PENDING
     target_bin_id: Optional[str] = None
     target_location_id: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
     committed_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     commit_summary: Optional[dict] = None
@@ -178,7 +183,7 @@ class SessionImage(BaseModel):
     height: Optional[int] = None
     file_size_bytes: Optional[int] = None
     extracted_data: Optional[dict] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
 class PendingItem(BaseModel):
@@ -194,8 +199,8 @@ class PendingItem(BaseModel):
     category_id: Optional[str] = None
     confidence: Optional[float] = None
     source: PendingItemSource = PendingItemSource.MANUAL
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 # --- Response Models (with joins) ---
@@ -296,8 +301,8 @@ class User(BaseModel):
     password_hash: str
     is_admin: bool = False
     must_change_password: bool = False
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 class UserPublic(BaseModel):
@@ -319,7 +324,7 @@ class ApiKey(BaseModel):
     user_id: str
     key_hash: str
     name: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
     last_used_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
     is_active: bool = True
@@ -349,7 +354,7 @@ class AuthSession(BaseModel):
     id: str = Field(default_factory=generate_id)
     user_id: str
     token_hash: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
     expires_at: datetime
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None

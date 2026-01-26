@@ -20,6 +20,7 @@
     <div id="create-location-form" class="hidden bg-cream-light rounded-xl border border-cream-dark p-4 mb-6">
         <h3 class="font-medium text-fynbos-800 mb-3">Create New Location</h3>
         <form action="/browse/create-location" method="post" class="space-y-4">
+            {{ csrf_token_input(request)|safe }}
             <div>
                 <label for="location_name" class="block text-sm text-fynbos-600 mb-1">Name</label>
                 <input type="text"

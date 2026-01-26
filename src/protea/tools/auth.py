@@ -4,7 +4,7 @@ import hashlib
 import re
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import bcrypt
@@ -143,9 +143,7 @@ def create_user(
         return complexity_error
 
     # Check for existing username
-    existing = db.execute_one(
-        "SELECT id FROM users WHERE username = ?", (username,)
-    )
+    existing = db.execute_one("SELECT id FROM users WHERE username = ?", (username,))
     if existing:
         return {
             "error": "Username already exists",
@@ -154,16 +152,14 @@ def create_user(
 
     # Check for existing email
     if email:
-        existing = db.execute_one(
-            "SELECT id FROM users WHERE email = ?", (email,)
-        )
+        existing = db.execute_one("SELECT id FROM users WHERE email = ?", (email,))
         if existing:
             return {
                 "error": "Email already in use",
                 "error_code": "DUPLICATE_EMAIL",
             }
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     user = User(
         id=generate_id(),
         username=username,
@@ -318,7 +314,7 @@ def update_user_password(
     if isinstance(user, dict):
         return user
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     password_hash = hash_password(new_password)
 
     db.execute(
@@ -405,7 +401,7 @@ def create_session(
     """
     token = generate_session_token()
     token_hash = _hash_token(token)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expires_at = now + timedelta(hours=session_hours)
 
     session = AuthSession(
@@ -449,7 +445,7 @@ def validate_session(db: Database, token: str) -> User | None:
         User object or None if invalid/expired
     """
     token_hash = _hash_token(token)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     row = db.execute_one(
         """
@@ -512,7 +508,7 @@ def cleanup_expired_sessions(db: Database) -> int:
     Returns:
         Number of sessions cleaned up
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return db.execute_update("DELETE FROM auth_sessions WHERE expires_at <= ?", (now,))
 
 
@@ -550,7 +546,7 @@ def create_api_key(
 
     plaintext_key = generate_api_key()
     key_hash = _hash_token(plaintext_key)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     api_key = ApiKey(
         id=generate_id(),
@@ -606,7 +602,7 @@ def validate_api_key(db: Database, key: str) -> User | None:
         User object or None if invalid/expired/inactive
     """
     key_hash = _hash_token(key)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     row = db.execute_one(
         """

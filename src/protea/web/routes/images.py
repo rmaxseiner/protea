@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 
-from protea.services.image_store import ImageStore
+from protea.services.image_store import ImageStore, PathTraversalError
 from protea.web.dependencies import get_image_store
 
 router = APIRouter()
@@ -26,21 +26,20 @@ async def serve_image(
     Returns:
         FileResponse with the image
     """
-    # Security: prevent path traversal
-    if ".." in path:
-        raise HTTPException(status_code=400, detail="Invalid path")
-
-    # Get absolute path
-    if thumb:
-        # Convert path to thumbnail path
-        p = Path(path)
-        thumb_path = p.parent / f"{p.stem}_thumb{p.suffix}"
-        full_path = image_store.get_absolute_path(str(thumb_path))
-        if not full_path.exists():
-            # Fall back to main image if thumbnail doesn't exist
+    try:
+        # Get absolute path (includes path traversal protection)
+        if thumb:
+            # Convert path to thumbnail path
+            p = Path(path)
+            thumb_path = p.parent / f"{p.stem}_thumb{p.suffix}"
+            full_path = image_store.get_absolute_path(str(thumb_path))
+            if not full_path.exists():
+                # Fall back to main image if thumbnail doesn't exist
+                full_path = image_store.get_absolute_path(path)
+        else:
             full_path = image_store.get_absolute_path(path)
-    else:
-        full_path = image_store.get_absolute_path(path)
+    except PathTraversalError:
+        raise HTTPException(status_code=400, detail="Invalid path")
 
     if not full_path.exists():
         raise HTTPException(status_code=404, detail="Image not found")

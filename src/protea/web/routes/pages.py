@@ -17,8 +17,9 @@ from protea.tools import bins as bins_tools
 from protea.tools import items as items_tools
 from protea.tools import locations as locations_tools
 from protea.tools import search as search_tools
+from protea.services.image_store import InvalidImageError
 from protea.web.app import templates
-from protea.web.dependencies import get_db, get_image_store, require_auth
+from protea.web.dependencies import get_db, get_image_store, require_auth, validate_uuid
 
 router = APIRouter()
 
@@ -79,6 +80,9 @@ async def item_detail_page(
     user: User = Depends(require_auth),
 ):
     """Render item detail page."""
+    # Validate UUID format
+    validate_uuid(item_id, "item ID")
+
     result = items_tools.get_item(db, item_id)
 
     # Check if error
@@ -360,6 +364,9 @@ async def browse_location_page(
     user: User = Depends(require_auth),
 ):
     """Render location detail page."""
+    # Validate UUID format
+    validate_uuid(location_id, "location ID")
+
     result = locations_tools.get_location(db, location_id=location_id)
 
     if isinstance(result, dict) and "error" in result:
@@ -467,6 +474,9 @@ async def create_location_bin(
     user: User = Depends(require_auth),
 ):
     """Create a new bin in this location."""
+    # Validate UUID format
+    validate_uuid(location_id, "location ID")
+
     result = bins_tools.create_bin(
         db=db,
         name=name,
@@ -708,6 +718,9 @@ async def browse_bin_page(
     user: User = Depends(require_auth),
 ):
     """Render bin detail page in browse context."""
+    # Validate UUID format
+    validate_uuid(bin_id, "bin ID")
+
     result = bins_tools.get_bin(db, bin_id=bin_id, include_items=True, include_images=True)
 
     if isinstance(result, dict) and "error" in result:
@@ -838,25 +851,33 @@ async def upload_bin_image(
     user: User = Depends(require_auth),
 ):
     """Upload an image to a bin."""
+    # Validate bin_id is a proper UUID
+    validate_uuid(bin_id, "bin ID")
+
     # Read and encode the image
     contents = await image.read()
     image_base64 = base64.b64encode(contents).decode("utf-8")
 
-    # Add the image to the bin
-    result = bins_tools.add_bin_image(
-        db=db,
-        image_store=image_store,
-        bin_id=bin_id,
-        image_base64=image_base64,
-        caption=caption if caption else None,
-        is_primary=is_primary,
-    )
+    # Add the image to the bin (image validation happens in image_store)
+    try:
+        result = bins_tools.add_bin_image(
+            db=db,
+            image_store=image_store,
+            bin_id=bin_id,
+            image_base64=image_base64,
+            caption=caption if caption else None,
+            is_primary=is_primary,
+        )
+    except InvalidImageError as e:
+        return RedirectResponse(
+            url=f"/browse/bin/{bin_id}?upload_error=Invalid image: {e}",
+            status_code=303,
+        )
 
     # Redirect back to bin page
     if isinstance(result, dict) and "error" in result:
-        # TODO: Flash error message
         return RedirectResponse(
-            url=f"/browse/bin/{bin_id}?error={result['error']}",
+            url=f"/browse/bin/{bin_id}?upload_error={result['error']}",
             status_code=303,
         )
 

@@ -61,11 +61,38 @@ def web_app(web_settings):
     return app
 
 
+class CSRFTestClient(TestClient):
+    """Test client that automatically handles CSRF tokens."""
+
+    def _get_csrf_token(self) -> str:
+        """Get CSRF token from cookies."""
+        return self.cookies.get("protea_csrf", "")
+
+    def _add_csrf_to_data(self, data: dict | None) -> dict:
+        """Add CSRF token to form data."""
+        if data is None:
+            data = {}
+        data["csrf_token"] = self._get_csrf_token()
+        return data
+
+    def post(self, url: str, **kwargs):
+        """POST with automatic CSRF token."""
+        # First make a GET to get the CSRF cookie if we don't have one
+        if "protea_csrf" not in self.cookies:
+            self.get("/")
+
+        # Add CSRF token to form data
+        if "data" in kwargs:
+            kwargs["data"] = self._add_csrf_to_data(kwargs["data"])
+
+        return super().post(url, **kwargs)
+
+
 @pytest.fixture
 def client(web_app):
-    """Create test client."""
-    # Use TestClient without context manager to avoid lifespan issues
-    return TestClient(web_app, raise_server_exceptions=False)
+    """Create test client with CSRF support."""
+    # Use CSRFTestClient to automatically handle CSRF tokens
+    return CSRFTestClient(web_app, raise_server_exceptions=False)
 
 
 @pytest.fixture
@@ -192,7 +219,8 @@ class TestLocationPage:
 
     def test_location_page_not_found(self, client):
         """Test location page for non-existent location."""
-        response = client.get("/browse/location/nonexistent-id")
+        # Use valid UUID format but non-existent ID
+        response = client.get("/browse/location/00000000-0000-0000-0000-000000000000")
         assert response.status_code == 404
 
     def test_location_page_shows_bins(self, client, web_bin, web_location):
@@ -291,7 +319,8 @@ class TestBinPage:
 
     def test_bin_page_not_found(self, client):
         """Test bin page for non-existent bin."""
-        response = client.get("/browse/bin/nonexistent-id")
+        # Use valid UUID format but non-existent ID
+        response = client.get("/browse/bin/00000000-0000-0000-0000-000000000000")
         assert response.status_code == 404
 
     def test_bin_page_shows_items(self, client, web_item, web_bin):
@@ -396,7 +425,8 @@ class TestItemPage:
 
     def test_item_page_not_found(self, client):
         """Test item page for non-existent item."""
-        response = client.get("/item/nonexistent-id")
+        # Use valid UUID format but non-existent ID
+        response = client.get("/item/00000000-0000-0000-0000-000000000000")
         assert response.status_code == 404
 
     def test_item_page_shows_quantity(self, client, web_item):
@@ -521,26 +551,41 @@ class TestErrorHandling:
     """Tests for error handling in routes."""
 
     def test_invalid_location_id(self, client):
-        """Test handling of invalid location ID."""
+        """Test handling of invalid location ID format returns 400."""
         response = client.get("/browse/location/invalid-uuid-format")
-        assert response.status_code == 404
+        assert response.status_code == 400  # Bad Request for invalid UUID format
 
     def test_invalid_bin_id(self, client):
-        """Test handling of invalid bin ID."""
+        """Test handling of invalid bin ID format returns 400."""
         response = client.get("/browse/bin/invalid-uuid-format")
-        assert response.status_code == 404
+        assert response.status_code == 400  # Bad Request for invalid UUID format
 
     def test_invalid_item_id(self, client):
-        """Test handling of invalid item ID."""
+        """Test handling of invalid item ID format returns 400."""
         response = client.get("/item/invalid-uuid-format")
+        assert response.status_code == 400  # Bad Request for invalid UUID format
+
+    def test_nonexistent_location_id(self, client):
+        """Test handling of valid UUID format but nonexistent location returns 404."""
+        response = client.get("/browse/location/00000000-0000-0000-0000-000000000000")
+        assert response.status_code == 404
+
+    def test_nonexistent_bin_id(self, client):
+        """Test handling of valid UUID format but nonexistent bin returns 404."""
+        response = client.get("/browse/bin/00000000-0000-0000-0000-000000000000")
+        assert response.status_code == 404
+
+    def test_nonexistent_item_id(self, client):
+        """Test handling of valid UUID format but nonexistent item returns 404."""
+        response = client.get("/item/00000000-0000-0000-0000-000000000000")
         assert response.status_code == 404
 
     def test_create_bin_invalid_location(self, client):
-        """Test creating a bin with invalid location."""
+        """Test creating a bin with invalid location UUID format."""
         response = client.post(
             "/browse/location/nonexistent/create-bin",
             data={"name": "Test", "description": ""},
             follow_redirects=False,
         )
-        # Should redirect with error
-        assert response.status_code == 303
+        # Should return 400 for invalid UUID format
+        assert response.status_code == 400

@@ -1,5 +1,6 @@
 """FastAPI dependency injection for web UI."""
 
+import re
 from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request
@@ -9,6 +10,42 @@ from protea.db.connection import Database
 from protea.db.models import User
 from protea.services.image_store import ImageStore
 from protea.tools import auth as auth_tools
+
+# UUID validation pattern (standard UUID format)
+UUID_PATTERN = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
+
+
+def is_valid_uuid(value: str) -> bool:
+    """Check if a string is a valid UUID format.
+
+    Args:
+        value: String to validate
+
+    Returns:
+        True if valid UUID format, False otherwise
+    """
+    return bool(UUID_PATTERN.match(value))
+
+
+def validate_uuid(value: str, name: str = "ID") -> str:
+    """Validate a string is a valid UUID, raising HTTPException if not.
+
+    Args:
+        value: String to validate
+        name: Name of the parameter for error message
+
+    Returns:
+        The validated UUID string
+
+    Raises:
+        HTTPException: 400 if not a valid UUID format
+    """
+    if not is_valid_uuid(value):
+        raise HTTPException(status_code=400, detail=f"Invalid {name} format")
+    return value
 
 
 def get_db(request: Request) -> Database:

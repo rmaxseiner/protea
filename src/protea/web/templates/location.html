@@ -89,6 +89,7 @@
             {% if bins|length == 0 %}
             <form action="/browse/location/{{ location.id }}/delete" method="post" class="inline"
                   onsubmit="return confirm('Delete location \'{{ location.name }}\'? This cannot be undone.')">
+                {{ csrf_token_input(request)|safe }}
                 <button type="submit" class="px-4 py-2 bg-protea-600 text-white rounded-lg hover:bg-protea-700 transition-colors">
                     Delete Location
                 </button>
@@ -101,6 +102,7 @@
     <div id="edit-form" class="hidden bg-cream-light rounded-xl border border-cream-dark p-4 mb-6">
         <h3 class="font-medium text-fynbos-800 mb-3">Edit Location</h3>
         <form action="/browse/location/{{ location.id }}/edit" method="post" class="space-y-4">
+            {{ csrf_token_input(request)|safe }}
             <div>
                 <label for="name" class="block text-sm text-fynbos-600 mb-1">Name</label>
                 <input type="text"
@@ -183,6 +185,7 @@
         <div class="bg-cream-light rounded-xl border border-cream-dark p-4">
             <h3 class="font-medium text-fynbos-800 mb-3">Add New Bin</h3>
             <form action="/browse/location/{{ location.id }}/create-bin" method="post" class="space-y-4">
+                {{ csrf_token_input(request)|safe }}
                 <div>
                     <label for="bin_name" class="block text-sm text-fynbos-600 mb-1">Name</label>
                     <input type="text"

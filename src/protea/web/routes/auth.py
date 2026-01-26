@@ -1,5 +1,7 @@
 """Authentication routes for login, signup, and logout."""
 
+from urllib.parse import urlparse
+
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -8,8 +10,37 @@ from protea.db.connection import Database
 from protea.tools import auth as auth_tools
 from protea.web.app import templates
 from protea.web.dependencies import get_db, get_session_token
+from protea.web.security import check_rate_limit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _is_safe_redirect_url(url: str) -> bool:
+    """Validate that a redirect URL is safe (internal only).
+
+    Prevents open redirect attacks by ensuring the URL:
+    - Is a relative path starting with /
+    - Does not contain protocol-relative URLs (//)
+    - Does not have a netloc (external host)
+    """
+    if not url:
+        return False
+
+    # Must start with single forward slash (relative path)
+    if not url.startswith("/") or url.startswith("//"):
+        return False
+
+    # Parse and verify no external host
+    parsed = urlparse(url)
+    if parsed.netloc:
+        return False
+
+    return True
+
+
+def _get_safe_redirect_url(url: str, default: str = "/") -> str:
+    """Return the URL if safe, otherwise return default."""
+    return url if _is_safe_redirect_url(url) else default
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -21,17 +52,20 @@ async def login_page(
     token: str = Depends(get_session_token),
 ):
     """Render login page."""
+    # Validate redirect URL to prevent open redirect attacks
+    safe_next = _get_safe_redirect_url(next)
+
     # If already logged in, redirect
     if token:
         user = auth_tools.validate_session(db, token)
         if user:
-            return RedirectResponse(url=next, status_code=303)
+            return RedirectResponse(url=safe_next, status_code=303)
 
     return templates.TemplateResponse(
         request=request,
         name="login.html",
         context={
-            "next_url": next,
+            "next_url": safe_next,
             "error": error,
             "active_nav": None,
         },
@@ -47,12 +81,18 @@ async def login(
     db: Database = Depends(get_db),
 ):
     """Handle login form submission."""
+    # Rate limit authentication attempts
+    check_rate_limit(request)
+
+    # Validate redirect URL to prevent open redirect attacks
+    safe_next = _get_safe_redirect_url(next)
+
     # Authenticate user
     result = auth_tools.authenticate_user(db, username, password)
 
     if isinstance(result, dict) and "error" in result:
         return RedirectResponse(
-            url=f"/auth/login?next={next}&error={result['error']}",
+            url=f"/auth/login?next={safe_next}&error={result['error']}",
             status_code=303,
         )
 
@@ -71,14 +111,15 @@ async def login(
     if user.must_change_password:
         response = RedirectResponse(url="/settings/change-password", status_code=303)
     else:
-        response = RedirectResponse(url=next, status_code=303)
+        response = RedirectResponse(url=safe_next, status_code=303)
 
-    # Set session cookie
+    # Set session cookie with security flags
     response.set_cookie(
         key="protea_session",
         value=token,
         httponly=True,
         samesite="lax",
+        secure=auth_settings.secure_cookies,
         max_age=auth_settings.session_hours * 3600,
     )
 
@@ -168,12 +209,13 @@ async def signup(
 
     response = RedirectResponse(url="/", status_code=303)
 
-    # Set session cookie
+    # Set session cookie with security flags
     response.set_cookie(
         key="protea_session",
         value=token,
         httponly=True,
         samesite="lax",
+        secure=auth_settings.secure_cookies,
         max_age=auth_settings.session_hours * 3600,
     )
 

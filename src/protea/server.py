@@ -24,7 +24,7 @@ from protea.tools import (
     sessions,
     vision,
 )
-from protea.tools import auth as auth_tools
+from protea.tools import admin, auth as auth_tools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -78,10 +78,12 @@ def _process_bin_images(bin_id: str, context: str | None = None) -> dict:
         image_path = Path(settings.image_base_path) / bin_image.file_path
 
         if not image_path.exists():
-            failed_images.append({
-                "image_id": bin_image.id,
-                "error": "Image file not found",
-            })
+            failed_images.append(
+                {
+                    "image_id": bin_image.id,
+                    "error": "Image file not found",
+                }
+            )
             continue
 
         try:
@@ -94,10 +96,12 @@ def _process_bin_images(bin_id: str, context: str | None = None) -> dict:
             result = vision.extract_items_from_image(image_base64, context)
 
             if isinstance(result, dict) and "error" in result:
-                failed_images.append({
-                    "image_id": bin_image.id,
-                    "error": result.get("error"),
-                })
+                failed_images.append(
+                    {
+                        "image_id": bin_image.id,
+                        "error": result.get("error"),
+                    }
+                )
                 continue
 
             # Collect results
@@ -109,10 +113,12 @@ def _process_bin_images(bin_id: str, context: str | None = None) -> dict:
 
         except Exception as e:
             logger.error(f"Error processing image {bin_image.id}: {e}")
-            failed_images.append({
-                "image_id": bin_image.id,
-                "error": str(e),
-            })
+            failed_images.append(
+                {
+                    "image_id": bin_image.id,
+                    "error": str(e),
+                }
+            )
 
     return {
         "bin_id": bin_id,
@@ -203,8 +209,15 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "location_id": {"type": "string", "description": "Filter by location UUID"},
-                "parent_bin_id": {"type": "string", "description": "Filter by parent bin UUID (get children)"},
-                "root_only": {"type": "boolean", "description": "Only return root-level bins (no parent)", "default": False},
+                "parent_bin_id": {
+                    "type": "string",
+                    "description": "Filter by parent bin UUID (get children)",
+                },
+                "root_only": {
+                    "type": "boolean",
+                    "description": "Only return root-level bins (no parent)",
+                    "default": False,
+                },
             },
         },
     ),
@@ -216,8 +229,16 @@ TOOLS = [
             "properties": {
                 "bin_id": {"type": "string", "description": "Bin UUID"},
                 "bin_name": {"type": "string", "description": "Bin name"},
-                "include_items": {"type": "boolean", "description": "Include items", "default": True},
-                "include_images": {"type": "boolean", "description": "Include images", "default": False},
+                "include_items": {
+                    "type": "boolean",
+                    "description": "Include items",
+                    "default": True,
+                },
+                "include_images": {
+                    "type": "boolean",
+                    "description": "Include images",
+                    "default": False,
+                },
             },
         },
     ),
@@ -227,9 +248,18 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Path like 'Location/Bin1/Bin2' or 'Bin1/Bin2' if location provided"},
-                "location_id": {"type": "string", "description": "Location UUID if path doesn't include location"},
-                "location_name": {"type": "string", "description": "Location name if path doesn't include location"},
+                "path": {
+                    "type": "string",
+                    "description": "Path like 'Location/Bin1/Bin2' or 'Bin1/Bin2' if location provided",
+                },
+                "location_id": {
+                    "type": "string",
+                    "description": "Location UUID if path doesn't include location",
+                },
+                "location_name": {
+                    "type": "string",
+                    "description": "Location name if path doesn't include location",
+                },
             },
             "required": ["path"],
         },
@@ -241,8 +271,15 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "location_id": {"type": "string", "description": "Filter by location UUID"},
-                "root_bin_id": {"type": "string", "description": "Start from specific bin (get subtree)"},
-                "max_depth": {"type": "integer", "description": "Maximum nesting depth", "default": 10},
+                "root_bin_id": {
+                    "type": "string",
+                    "description": "Start from specific bin (get subtree)",
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "description": "Maximum nesting depth",
+                    "default": 10,
+                },
             },
         },
     ),
@@ -254,7 +291,10 @@ TOOLS = [
             "properties": {
                 "name": {"type": "string", "description": "Bin name"},
                 "location_id": {"type": "string", "description": "Parent location UUID"},
-                "parent_bin_id": {"type": "string", "description": "Parent bin UUID for nesting (optional)"},
+                "parent_bin_id": {
+                    "type": "string",
+                    "description": "Parent bin UUID for nesting (optional)",
+                },
                 "description": {"type": "string", "description": "Optional description"},
             },
             "required": ["name", "location_id"],
@@ -269,7 +309,10 @@ TOOLS = [
                 "bin_id": {"type": "string", "description": "Bin UUID"},
                 "name": {"type": "string", "description": "New name"},
                 "location_id": {"type": "string", "description": "New location"},
-                "parent_bin_id": {"type": "string", "description": "New parent bin (empty string '' to move to root)"},
+                "parent_bin_id": {
+                    "type": "string",
+                    "description": "New parent bin (empty string '' to move to root)",
+                },
                 "description": {"type": "string", "description": "New description"},
             },
             "required": ["bin_id"],
@@ -307,9 +350,16 @@ TOOLS = [
                 "name": {"type": "string", "description": "Item name"},
                 "bin_id": {"type": "string", "description": "Target bin UUID"},
                 "category_id": {"type": "string", "description": "Category UUID"},
-                "quantity_type": {"type": "string", "enum": ["exact", "approximate", "boolean"], "default": "boolean"},
+                "quantity_type": {
+                    "type": "string",
+                    "enum": ["exact", "approximate", "boolean"],
+                    "default": "boolean",
+                },
                 "quantity_value": {"type": "integer", "description": "Quantity value"},
-                "quantity_label": {"type": "string", "description": "Label like 'assorted', 'roll'"},
+                "quantity_label": {
+                    "type": "string",
+                    "description": "Label like 'assorted', 'roll'",
+                },
                 "description": {"type": "string", "description": "Item description"},
                 "notes": {"type": "string", "description": "Free-form notes"},
             },
@@ -408,7 +458,11 @@ TOOLS = [
                 "bin_id": {"type": "string", "description": "Filter by bin"},
                 "location_id": {"type": "string", "description": "Filter by location"},
                 "category_id": {"type": "string", "description": "Filter by category"},
-                "include_children": {"type": "boolean", "description": "Include subcategories", "default": True},
+                "include_children": {
+                    "type": "boolean",
+                    "description": "Include subcategories",
+                    "default": True,
+                },
             },
         },
     ),
@@ -430,7 +484,11 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {
-                "as_tree": {"type": "boolean", "description": "Return as nested tree", "default": False},
+                "as_tree": {
+                    "type": "boolean",
+                    "description": "Return as nested tree",
+                    "default": False,
+                },
             },
         },
     ),
@@ -454,7 +512,10 @@ TOOLS = [
             "properties": {
                 "category_id": {"type": "string", "description": "Category UUID"},
                 "name": {"type": "string"},
-                "parent_id": {"type": "string", "description": "New parent (empty string for root)"},
+                "parent_id": {
+                    "type": "string",
+                    "description": "New parent (empty string for root)",
+                },
             },
             "required": ["category_id"],
         },
@@ -659,7 +720,10 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "bin_id": {"type": "string", "description": "Bin UUID"},
-                "context": {"type": "string", "description": "Optional context hint (e.g., 'this is an electronics drawer')"},
+                "context": {
+                    "type": "string",
+                    "description": "Optional context hint (e.g., 'this is an electronics drawer')",
+                },
             },
             "required": ["bin_id"],
         },
@@ -678,7 +742,10 @@ TOOLS = [
                         "type": "object",
                         "properties": {
                             "name": {"type": "string", "description": "Item name"},
-                            "quantity_type": {"type": "string", "enum": ["exact", "approximate", "boolean"]},
+                            "quantity_type": {
+                                "type": "string",
+                                "enum": ["exact", "approximate", "boolean"],
+                            },
                             "quantity_value": {"type": "integer"},
                             "quantity_label": {"type": "string"},
                             "description": {"type": "string"},
@@ -825,37 +892,6 @@ async def _handle_tool(name: str, arguments: dict) -> Any:
         return {"error": f"Unknown tool: {name}", "error_code": "NOT_FOUND"}
 
 
-def _bootstrap_admin_user() -> None:
-    """Create admin user if no users exist."""
-    user_count = auth_tools.get_user_count(db)
-    if user_count > 0:
-        return
-
-    # Generate or use provided password
-    password = auth_settings.admin_password
-    if not password:
-        password = auth_tools.generate_random_password()
-
-    result = auth_tools.create_user(
-        db,
-        username="admin",
-        password=password,
-        is_admin=True,
-        must_change_password=True,
-    )
-
-    if isinstance(result, dict) and "error" in result:
-        logger.error(f"Failed to create admin user: {result['error']}")
-        return
-
-    # Use print() to ensure this critical message is always visible in logs
-    print("=" * 50, file=sys.stderr, flush=True)
-    print("FIRST-RUN: Admin user created", file=sys.stderr, flush=True)
-    print("Username: admin", file=sys.stderr, flush=True)
-    print(f"Password: {password}", file=sys.stderr, flush=True)
-    print("=" * 50, file=sys.stderr, flush=True)
-
-
 def _validate_stdio_auth() -> bool:
     """Validate authentication for stdio transport.
 
@@ -897,7 +933,7 @@ def main():
     logger.info("Migrations complete.")
 
     # Bootstrap admin user if needed
-    _bootstrap_admin_user()
+    admin.bootstrap_admin_user(db)
 
     # Validate authentication
     if not _validate_stdio_auth():

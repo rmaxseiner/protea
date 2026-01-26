@@ -1,7 +1,7 @@
 """Item management tools for protea."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from protea.db.connection import Database
 from protea.db.models import (
@@ -41,18 +41,12 @@ def _get_item_with_location(db: Database, item_id: str) -> ItemWithLocation | No
     bin_path = _build_bin_path(db, row["bin_id"], include_location=True)
 
     # Build path parts with IDs for linking
-    bin_path_parts = [
-        BinPathPart(id=row["loc_id"], name=row["loc_name"], type="location")
-    ]
+    bin_path_parts = [BinPathPart(id=row["loc_id"], name=row["loc_name"], type="location")]
     ancestors = _get_bin_ancestors(db, row["bin_id"])
     for ancestor in ancestors:
-        bin_path_parts.append(
-            BinPathPart(id=ancestor.id, name=ancestor.name, type="bin")
-        )
+        bin_path_parts.append(BinPathPart(id=ancestor.id, name=ancestor.name, type="bin"))
     # Add the item's bin itself
-    bin_path_parts.append(
-        BinPathPart(id=row["bin_id"], name=row["bin_name"], type="bin")
-    )
+    bin_path_parts.append(BinPathPart(id=row["bin_id"], name=row["bin_name"], type="bin"))
 
     return ItemWithLocation(
         id=row["id"],
@@ -376,7 +370,7 @@ def update_item(
     new_quantity_label = quantity_label if quantity_label is not None else row["quantity_label"]
     new_description = description if description is not None else row["description"]
     new_notes = notes if notes is not None else row["notes"]
-    updated_at = datetime.utcnow()
+    updated_at = datetime.now(timezone.utc)
 
     # Check if text fields changed - if so, regenerate embedding
     text_changed = (
@@ -557,7 +551,7 @@ def use_item(
 
     current_qty = row["quantity_value"] or 0
     new_qty = max(0, current_qty - quantity)
-    updated_at = datetime.utcnow()
+    updated_at = datetime.now(timezone.utc)
 
     with db.connection() as conn:
         conn.execute(
@@ -632,7 +626,7 @@ def move_item(
 
     from_bin_id = row["bin_id"]
     current_qty = row["quantity_value"] or 1
-    updated_at = datetime.utcnow()
+    updated_at = datetime.now(timezone.utc)
 
     # Determine if splitting
     if quantity is not None and quantity < current_qty:
@@ -683,10 +677,14 @@ def move_item(
                     new_item.description,
                     new_item.category_id,
                     new_item.bin_id,
-                    new_item.quantity_type.value if isinstance(new_item.quantity_type, QuantityType) else new_item.quantity_type,
+                    new_item.quantity_type.value
+                    if isinstance(new_item.quantity_type, QuantityType)
+                    else new_item.quantity_type,
                     new_item.quantity_value,
                     new_item.quantity_label,
-                    new_item.source.value if isinstance(new_item.source, ItemSource) else new_item.source,
+                    new_item.source.value
+                    if isinstance(new_item.source, ItemSource)
+                    else new_item.source,
                     new_item.source_reference,
                     new_item.photo_url,
                     new_item.notes,

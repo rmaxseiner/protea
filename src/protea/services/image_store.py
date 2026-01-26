@@ -7,9 +7,24 @@ import shutil
 from pathlib import Path
 from typing import TypedDict
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 logger = logging.getLogger("protea")
+
+# Allowed image formats for validation
+ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG", "GIF", "WEBP", "BMP", "TIFF"}
+
+
+class InvalidImageError(Exception):
+    """Raised when an uploaded file is not a valid image."""
+
+    pass
+
+
+class PathTraversalError(Exception):
+    """Raised when a path traversal attack is detected."""
+
+    pass
 
 
 class ImageMetadata(TypedDict):
@@ -49,6 +64,64 @@ class ImageStore:
         (self.base_path / "bins").mkdir(parents=True, exist_ok=True)
         (self.base_path / "sessions").mkdir(parents=True, exist_ok=True)
 
+    def _validate_path(self, relative_path: str) -> Path:
+        """Validate a relative path is safe and within base_path.
+
+        Args:
+            relative_path: Path relative to base_path
+
+        Returns:
+            Resolved absolute Path
+
+        Raises:
+            PathTraversalError: If path escapes base directory
+        """
+        # Resolve the full path
+        full_path = (self.base_path / relative_path).resolve()
+
+        # Ensure it's within base_path
+        try:
+            full_path.relative_to(self.base_path.resolve())
+        except ValueError:
+            raise PathTraversalError(
+                f"Path traversal detected: {relative_path} resolves outside base directory"
+            )
+
+        return full_path
+
+    def _validate_image_data(self, image_bytes: bytes) -> Image.Image:
+        """Validate that bytes represent a valid image.
+
+        Args:
+            image_bytes: Raw image data
+
+        Returns:
+            PIL Image object
+
+        Raises:
+            InvalidImageError: If data is not a valid image
+        """
+        try:
+            img = Image.open(io.BytesIO(image_bytes))
+            # Verify the image can be loaded (some corrupt files pass open but fail load)
+            img.verify()
+            # Re-open after verify (verify closes the file)
+            img = Image.open(io.BytesIO(image_bytes))
+            img.load()
+        except UnidentifiedImageError:
+            raise InvalidImageError("File is not a recognized image format")
+        except Exception as e:
+            raise InvalidImageError(f"Invalid or corrupt image data: {e}")
+
+        # Check format is allowed
+        if img.format and img.format.upper() not in ALLOWED_IMAGE_FORMATS:
+            raise InvalidImageError(
+                f"Image format '{img.format}' not allowed. "
+                f"Allowed formats: {', '.join(ALLOWED_IMAGE_FORMATS)}"
+            )
+
+        return img
+
     def _get_format_for_save(self) -> str:
         """Get PIL format string for saving."""
         format_map = {
@@ -80,9 +153,9 @@ class ImageStore:
         session_dir = self.base_path / "sessions" / session_id
         session_dir.mkdir(parents=True, exist_ok=True)
 
-        # Decode and process image
+        # Decode and validate image
         image_bytes = base64.b64decode(image_base64)
-        img = Image.open(io.BytesIO(image_bytes))
+        img = self._validate_image_data(image_bytes)
 
         # Convert to RGB if necessary (for JPEG/WebP)
         if img.mode in ("RGBA", "P") and self.image_format in ("webp", "jpg", "jpeg"):
@@ -135,9 +208,9 @@ class ImageStore:
         bin_dir = self.base_path / "bins" / bin_id
         bin_dir.mkdir(parents=True, exist_ok=True)
 
-        # Decode and process image
+        # Decode and validate image
         image_bytes = base64.b64decode(image_base64)
-        img = Image.open(io.BytesIO(image_bytes))
+        img = self._validate_image_data(image_bytes)
 
         # Convert to RGB if necessary
         if img.mode in ("RGBA", "P") and self.image_format in ("webp", "jpg", "jpeg"):
@@ -188,8 +261,8 @@ class ImageStore:
         bin_dir = self.base_path / "bins" / bin_id
         bin_dir.mkdir(parents=True, exist_ok=True)
 
-        # Copy main image
-        src_path = self.base_path / session_image_path
+        # Validate and copy main image
+        src_path = self._validate_path(session_image_path)
         dst_path = bin_dir / f"{new_image_id}.{self.image_format}"
 
         img = Image.open(src_path)
@@ -231,8 +304,11 @@ class ImageStore:
 
         Returns:
             True if deleted, False if not found
+
+        Raises:
+            PathTraversalError: If path attempts to escape base directory
         """
-        full_path = self.base_path / file_path
+        full_path = self._validate_path(file_path)
         if full_path.exists():
             full_path.unlink()
 
@@ -258,9 +334,7 @@ class ImageStore:
         session_dir = self.base_path / "sessions" / session_id
         if session_dir.exists():
             # Count image files (not thumbnails)
-            count = len(
-                [f for f in session_dir.iterdir() if not f.stem.endswith("_thumb")]
-            )
+            count = len([f for f in session_dir.iterdir() if not f.stem.endswith("_thumb")])
             shutil.rmtree(session_dir)
             logger.debug(f"Deleted {count} session images for session {session_id}")
             return count
@@ -274,8 +348,11 @@ class ImageStore:
 
         Returns:
             Absolute Path object
+
+        Raises:
+            PathTraversalError: If path attempts to escape base directory
         """
-        return self.base_path / relative_path
+        return self._validate_path(relative_path)
 
     def get_image_as_base64(self, relative_path: str) -> str | None:
         """Read an image and return as base64.
@@ -285,8 +362,11 @@ class ImageStore:
 
         Returns:
             Base64-encoded image data, or None if not found
+
+        Raises:
+            PathTraversalError: If path attempts to escape base directory
         """
-        full_path = self.base_path / relative_path
+        full_path = self._validate_path(relative_path)
         if full_path.exists():
             with open(full_path, "rb") as f:
                 return base64.b64encode(f.read()).decode("utf-8")

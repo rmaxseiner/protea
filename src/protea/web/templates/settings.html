@@ -58,6 +58,7 @@
         </p>
 
         <form method="POST" action="/settings/embedding-model" id="embedding-form">
+            {{ csrf_token_input(request)|safe }}
             <div class="space-y-3 mb-4">
                 {% for model_id, model_info in embedding_models.items() %}
                 <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-fynbos-50 transition-colors
@@ -128,6 +129,7 @@
 
         <!-- Create New Key Form -->
         <form method="POST" action="/settings/api-keys/create" class="mb-6">
+            {{ csrf_token_input(request)|safe }}
             <div class="flex gap-2">
                 <input type="text" name="name" placeholder="Key name (e.g., Claude Desktop)" required
                        class="flex-1 px-4 py-2 border border-fynbos-300 rounded-lg focus:ring-2 focus:ring-protea-500 focus:border-protea-500 outline-none transition-colors">
@@ -160,6 +162,7 @@
                 <div class="flex gap-2">
                     {% if key.is_active %}
                     <form method="POST" action="/settings/api-keys/{{ key.id }}/revoke" class="inline">
+                        {{ csrf_token_input(request)|safe }}
                         <button type="submit"
                                 class="px-3 py-1 text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded transition-colors"
                                 onclick="return confirm('Revoke this API key? It will no longer work for authentication.')">
@@ -168,6 +171,7 @@
                     </form>
                     {% endif %}
                     <form method="POST" action="/settings/api-keys/{{ key.id }}/delete" class="inline">
+                        {{ csrf_token_input(request)|safe }}
                         <button type="submit"
                                 class="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
                                 onclick="return confirm('Permanently delete this API key? This cannot be undone.')">

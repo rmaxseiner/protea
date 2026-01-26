@@ -10,44 +10,11 @@ from starlette.routing import Mount, Route
 
 from protea.config import auth_settings, settings
 from protea.server import server, db
-from protea.tools import auth as auth_tools
+from protea.tools import admin, auth as auth_tools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("protea.sse")
-
-
-def _bootstrap_admin_user() -> None:
-    """Create admin user if no users exist (for SSE server startup)."""
-    import sys
-
-    user_count = auth_tools.get_user_count(db)
-    if user_count > 0:
-        return
-
-    # Generate or use provided password
-    password = auth_settings.admin_password
-    if not password:
-        password = auth_tools.generate_random_password()
-
-    result = auth_tools.create_user(
-        db,
-        username="admin",
-        password=password,
-        is_admin=True,
-        must_change_password=True,
-    )
-
-    if isinstance(result, dict) and "error" in result:
-        logger.error(f"Failed to create admin user: {result['error']}")
-        return
-
-    # Use print() to ensure this critical message is always visible in logs
-    print("=" * 50, file=sys.stderr, flush=True)
-    print("FIRST-RUN: Admin user created", file=sys.stderr, flush=True)
-    print("Username: admin", file=sys.stderr, flush=True)
-    print(f"Password: {password}", file=sys.stderr, flush=True)
-    print("=" * 50, file=sys.stderr, flush=True)
 
 
 def create_sse_app() -> Starlette:
@@ -117,7 +84,7 @@ def main():
     logger.info("Migrations complete.")
 
     # Bootstrap admin user if needed
-    _bootstrap_admin_user()
+    admin.bootstrap_admin_user(db)
 
     if auth_settings.auth_required:
         logger.info("Authentication ENABLED - API key required for connections")

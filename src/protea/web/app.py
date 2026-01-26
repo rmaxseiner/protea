@@ -4,7 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -12,6 +12,8 @@ from protea import __version__
 from protea.config import settings
 from protea.db.connection import Database
 from protea.services.image_store import ImageStore
+from protea.tools import admin
+from protea.web.security import CSRFMiddleware, get_csrf_token
 
 logger = logging.getLogger("protea.web")
 
@@ -25,39 +27,14 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 templates.env.globals["app_version"] = __version__
 
 
-def _bootstrap_admin_user(db: Database) -> None:
-    """Create admin user if no users exist."""
-    import sys
-    from protea.config import auth_settings
-    from protea.tools import auth as auth_tools
+def csrf_token_input(request: Request) -> str:
+    """Generate hidden input field with CSRF token for forms."""
+    token = get_csrf_token(request)
+    return f'<input type="hidden" name="csrf_token" value="{token}">'
 
-    user_count = auth_tools.get_user_count(db)
-    if user_count > 0:
-        return
 
-    # Generate or use provided password
-    password = auth_settings.admin_password
-    if not password:
-        password = auth_tools.generate_random_password()
-
-    result = auth_tools.create_user(
-        db,
-        username="admin",
-        password=password,
-        is_admin=True,
-        must_change_password=True,
-    )
-
-    if isinstance(result, dict) and "error" in result:
-        logger.error(f"Failed to create admin user: {result['error']}")
-        return
-
-    # Use print() to ensure this critical message is always visible in logs
-    print("=" * 50, file=sys.stderr, flush=True)
-    print("FIRST-RUN: Admin user created", file=sys.stderr, flush=True)
-    print("Username: admin", file=sys.stderr, flush=True)
-    print(f"Password: {password}", file=sys.stderr, flush=True)
-    print("=" * 50, file=sys.stderr, flush=True)
+# Add CSRF helper to templates
+templates.env.globals["csrf_token_input"] = csrf_token_input
 
 
 @asynccontextmanager
@@ -69,7 +46,7 @@ async def lifespan(app: FastAPI):
     app.state.db = db
 
     # Bootstrap admin user if needed
-    _bootstrap_admin_user(db)
+    admin.bootstrap_admin_user(db)
 
     # Initialize image store
     app.state.image_store = ImageStore(
@@ -91,6 +68,13 @@ def create_app() -> FastAPI:
         description="Web interface for inventory management",
         version="1.0.0",
         lifespan=lifespan,
+    )
+
+    # Add CSRF protection middleware
+    # Exempt paths: image uploads, partials (htmx fragments)
+    app.add_middleware(
+        CSRFMiddleware,
+        exempt_paths={"/images/", "/partials/"},
     )
 
     # Mount static files

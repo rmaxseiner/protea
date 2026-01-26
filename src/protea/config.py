@@ -63,6 +63,12 @@ class AuthSettings(BaseSettings):
     # Whether authentication is required (False for dev/testing)
     auth_required: bool = True  # PROTEA_AUTH_REQUIRED
 
+    # Secure cookie flag (should be True in production with HTTPS)
+    secure_cookies: bool = False  # PROTEA_SECURE_COOKIES
+
+    # Rate limiting for auth endpoints (attempts per minute)
+    auth_rate_limit: int = 10  # PROTEA_AUTH_RATE_LIMIT
+
     model_config = SettingsConfigDict(env_prefix="PROTEA_")
 
 

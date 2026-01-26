@@ -1,6 +1,6 @@
 """Location management tools for protea."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from protea.db.connection import Database
 from protea.db.models import Location
@@ -15,9 +15,7 @@ def get_locations(db: Database) -> list[Location]:
     Returns:
         List of all locations
     """
-    rows = db.execute(
-        "SELECT * FROM locations ORDER BY name"
-    )
+    rows = db.execute("SELECT * FROM locations ORDER BY name")
     return [
         Location(
             id=row["id"],
@@ -166,7 +164,7 @@ def update_location(
     # Build update
     new_name = name if name is not None else row["name"]
     new_description = description if description is not None else row["description"]
-    updated_at = datetime.utcnow()
+    updated_at = datetime.now(timezone.utc)
 
     with db.connection() as conn:
         conn.execute(

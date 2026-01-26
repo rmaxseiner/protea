@@ -1,6 +1,6 @@
 """Bin management tools for protea."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from protea.db.connection import Database
 from protea.db.models import (
@@ -266,9 +266,7 @@ def get_bin_tree(
             (location_id,),
         )
     else:
-        root_rows = db.execute(
-            "SELECT * FROM bins WHERE parent_bin_id IS NULL ORDER BY name"
-        )
+        root_rows = db.execute("SELECT * FROM bins WHERE parent_bin_id IS NULL ORDER BY name")
 
     bins = []
     for row in root_rows:
@@ -677,7 +675,9 @@ def update_bin(
             }
         # If changing location, must also update parent (can't have parent in different location)
         if new_parent_bin_id:
-            parent_row = db.execute_one("SELECT location_id FROM bins WHERE id = ?", (new_parent_bin_id,))
+            parent_row = db.execute_one(
+                "SELECT location_id FROM bins WHERE id = ?", (new_parent_bin_id,)
+            )
             if parent_row and parent_row["location_id"] != new_location_id:
                 return {
                     "error": "Parent bin must be in the same location",
@@ -729,7 +729,7 @@ def update_bin(
                 "error_code": "ALREADY_EXISTS",
             }
 
-    updated_at = datetime.utcnow()
+    updated_at = datetime.now(timezone.utc)
 
     with db.connection() as conn:
         conn.execute(
@@ -738,7 +738,14 @@ def update_bin(
             SET name = ?, location_id = ?, parent_bin_id = ?, description = ?, updated_at = ?
             WHERE id = ?
             """,
-            (new_name, new_location_id, new_parent_bin_id, new_description, updated_at.isoformat(), bin_id),
+            (
+                new_name,
+                new_location_id,
+                new_parent_bin_id,
+                new_description,
+                updated_at.isoformat(),
+                bin_id,
+            ),
         )
 
     return Bin(
