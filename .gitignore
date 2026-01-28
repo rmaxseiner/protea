@@ -48,3 +48,8 @@ htmlcov/
 # Environment
 .env
 .env.local
+
+# Internal documentation (kept locally only)
+docs/status/
+docs/layouts/
+docs/features/
