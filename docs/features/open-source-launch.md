@@ -117,9 +117,9 @@ Prepare Protea for public open source release with proper documentation, licensi
 - [x] Write comprehensive README.md
 - [x] Choose and add LICENSE file (MIT)
 - [x] Write CONTRIBUTING.md with code style guide
-- [ ] Add CODE_OF_CONDUCT.md
-- [ ] Create issue templates (bug, feature request)
-- [ ] Create PR template
+- [x] Add CODE_OF_CONDUCT.md
+- [x] Create issue templates (bug, feature request)
+- [x] Create PR template
 - [ ] Set up GitHub Discussions
 - [ ] Create initial GitHub Project board
 - [ ] Write announcement blog post draft
