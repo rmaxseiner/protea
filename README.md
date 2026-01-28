@@ -35,7 +35,7 @@ docker compose up -d
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/protea.git
+git clone https://github.com/rmaxseiner/protea.git
 cd protea
 
 # Create virtual environment
@@ -189,14 +189,6 @@ protea/
 ├── docs/                  # Documentation
 └── docker-compose.yml     # Docker deployment
 ```
-
-## Roadmap
-
-- [ ] Barcode/UPC scanning and lookup
-- [ ] Item dimensions and DrawerDone integration
-- [ ] PWA support for mobile installation
-- [ ] Data export (CSV/JSON)
-- [ ] Multi-user support
 
 ## Contributing
 
