@@ -119,7 +119,7 @@ Add CSV export for items
 git push origin your-branch-name
 ```
 
-Then open a Pull Request on GitHub/Gitea.
+Then open a Pull Request on GitHub.
 
 ## Pull Request Guidelines
 

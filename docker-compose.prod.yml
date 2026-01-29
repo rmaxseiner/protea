@@ -1,9 +1,9 @@
-# Production docker-compose - pulls from Gitea registry
+# Production docker-compose - pulls from GitHub Container Registry
 # Usage: docker compose -f docker-compose.prod.yml up -d
 
 services:
   protea-web:
-    image: git.maxseiner.casa/ron-maxseiner/protea:latest
+    image: ghcr.io/rmaxseiner/protea:latest
     container_name: protea-web
     restart: unless-stopped
     ports:
