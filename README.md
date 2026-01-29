@@ -1,6 +1,6 @@
 # Protea Inventory System
 
-> MCP-powered inventory management for makers, homelabbers, and tinkerers
+> MCP-powered inventory management for home
 
 Protea is a physical inventory management system built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Manage your workshop, lab, or home inventory through natural language conversations with Claude or any MCP-compatible AI assistant, or use the included web UI.
 
@@ -8,7 +8,7 @@ Protea is a physical inventory management system built on the [Model Context Pro
 
 - **MCP-Native Architecture** - Built from the ground up for AI assistant integration
 - **Natural Language Interface** - "Add these resistors to my electronics bin" + photo
-- **Vision Extraction** - Identify items from photos using Claude's vision capabilities
+- **Vision Extraction** - Identify items from photos using AI vision capabilities
 - **Web UI** - Mobile-friendly interface for browsing, searching, and quick edits
 - **Hierarchical Organization** - Locations → Bins → Items (with nested sub-bins)
 - **Full-Text Search** - Find anything instantly with SQLite FTS5
