@@ -1,6 +1,4 @@
-# Release - Build versioned image and deploy to production
-# Triggers when a version tag is pushed (v1.0.0, v1.2.3, etc.)
-
+# Build and publish Docker image when a release is tagged
 name: Release
 
 on:
@@ -19,17 +17,13 @@ jobs:
       contents: write
       packages: write
 
-    outputs:
-      version: ${{ steps.meta.outputs.version }}
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -60,43 +54,3 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Deploy to production on your local server
-  deploy-production:
-    needs: build
-    runs-on: self-hosted
-    environment: production
-
-    steps:
-      - name: Pull latest release image
-        run: |
-          docker pull ghcr.io/${{ github.repository }}:latest
-
-      - name: Backup database before deployment
-        run: |
-          BACKUP_DIR="/opt/protea-prod/backups"
-          mkdir -p "$BACKUP_DIR"
-          cp /opt/protea-prod/data/db/inventory.db "$BACKUP_DIR/inventory-$(date +%Y%m%d-%H%M%S).db"
-          echo "Database backed up"
-
-      - name: Deploy to production
-        run: |
-          cd /opt/protea-prod
-          docker compose down
-          docker compose up -d
-
-      - name: Wait for healthy
-        run: |
-          echo "Waiting for container to be healthy..."
-          sleep 10
-          curl --fail --silent http://localhost:8080/ || exit 1
-          echo "Production deployment healthy!"
-
-      - name: Clean up old backups (keep last 10)
-        run: |
-          BACKUP_DIR="/opt/protea-prod/backups"
-          cd "$BACKUP_DIR"
-          ls -t *.db | tail -n +11 | xargs -r rm --
