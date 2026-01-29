@@ -8,7 +8,6 @@ A Model Context Protocol (MCP) server for managing physical inventory with multi
 
 1. **Primary:** Build LLM/agent skills - multimodal input, state-changing operations
 2. **Secondary:** Practical inventory management for home workshop/lab
-3. **Future:** Home Assistant voice integration, web UI
 
 ### Key Features
 
@@ -73,7 +72,7 @@ protea/
 |-----------|------------|-------|
 | Language | Python 3.11+ | Type hints throughout |
 | MCP Server | `mcp` package | Official Anthropic SDK |
-| Database | SQLite | FTS5 for search, migrate to Postgres later |
+| Database | SQLite | FTS5 for search |
 | Migrations | Raw SQL files | Simple version tracking |
 | Models | Pydantic v2 | Validation, serialization |
 | Image Processing | Pillow | WebP conversion, thumbnails |
@@ -1863,19 +1862,6 @@ Response: "You have 3 types of tape:
 - Electrical tape in Garage/Electronics Bin  
 - Scotch tape in Office/Desk Drawer"
 ```
-
----
-
-## Future Enhancements (Round 2+)
-
-1. **Web UI** - Browse, search, view images
-2. **Home Assistant integration** - Voice commands via Assist
-3. **Barcode scanning** - Camera-based UPC/ASIN lookup
-4. **Low stock alerts** - Notifications when items run low
-5. **Reorder links** - Amazon/supplier links for restocking
-6. **Export/import** - CSV/JSON backup and restore
-7. **Multi-user** - Shared household inventory
-8. **PostgreSQL migration** - For concurrent access
 
 ---
 

@@ -472,56 +472,6 @@ INSERT INTO schema_version (version) VALUES (3);
 
 ---
 
-## Implementation Phases
-
-### Phase 1: Core Search (MVP)
-- [ ] FastAPI app setup with Jinja2
-- [ ] Base template with responsive nav
-- [ ] Search page with FTS query
-- [ ] Search results display with thumbnails
-- [ ] Item detail view (read-only)
-- [ ] Image serving endpoint
-
-### Phase 2: Browse & Actions
-- [ ] Room/area tree browser
-- [ ] Expandable tree with htmx
-- [ ] Item action forms (add/use/remove quantity)
-- [ ] Edit item modal/page
-- [ ] Move item functionality
-- [ ] Add new item to bin
-
-### Phase 3: History & Auth
-- [ ] Activity history feed
-- [ ] History filtering (date, action, location)
-- [ ] User authentication
-- [ ] Login/logout flow
-- [ ] User tracking on actions
-- [ ] Session management
-
-### Phase 4: Containerization
-- [ ] Dockerfile
-- [ ] docker-compose.yml
-- [ ] Volume configuration
-- [ ] Environment variable handling
-- [ ] Health check endpoint
-- [ ] Documentation
-
----
-
-## Future Considerations (Out of Scope)
-
-These features are explicitly not in scope for v1 but noted for future:
-
-1. **Photo upload via web** - Keep in Claude Desktop for now
-2. **Vision extraction via web** - Requires API key management, keep in MCP
-3. **Barcode scanning** - Could add camera-based scanning later
-4. **Low stock alerts** - Notification system for running low
-5. **Shopping lists** - Generate lists from low stock items
-6. **Data export** - CSV/JSON export for backup
-7. **Multi-household** - Separate inventories for different users
-
----
-
 ## Design Decisions Log
 
 | Decision | Choice | Date |
@@ -530,19 +480,3 @@ These features are explicitly not in scope for v1 but noted for future:
 | Photo upload via web | No, keep in Claude Desktop | Jan 13, 2026 |
 | Layout | Sidebar Navigation (Layout A) | Jan 13, 2026 |
 | Color Scheme | King Protea (forest green + dusty rose) | Jan 13, 2026 |
-
----
-
-## Open Questions
-
-1. ~~Authentication needed?~~ **Yes, for user tracking**
-2. ~~Photo upload via web?~~ **No, keep in Claude Desktop**
-3. ~~Layout style?~~ **Sidebar Navigation (Layout A)**
-4. ~~Color scheme?~~ **King Protea**
-5. **Offline support?** - Service worker for viewing cached data?
-6. **Dark mode?** - Follow system preference? (Could invert to dark forest bg with cream accents)
-
----
-
-*Specification created: January 13, 2026*
-*Last updated: January 13, 2026 - Added visual design decisions*
